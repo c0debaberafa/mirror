@@ -54,7 +54,23 @@ module.exports = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			}
-  		}
+  		},
+      backgroundImage: {
+        'soft-gradient': 'linear-gradient(to bottom, hsl(var(--background)), hsl(var(--background)/0.8))',
+        'warm-gradient': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary)/0.8))',
+      },
+      boxShadow: {
+        'message': '0 2px 4px rgba(0, 0, 0, 0.1)',
+      },
+      keyframes: {
+        'gentle-bounce': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+        }
+      },
+      animation: {
+        'gentle-bounce': 'gentle-bounce 0.5s ease-in-out',
+      }
   	}
   },
   plugins: [require("tailwindcss-animate")],
