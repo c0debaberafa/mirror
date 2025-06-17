@@ -1,6 +1,30 @@
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
-import { supabase } from '@/lib/supabase';
+import { createUser, updateUser, deleteUser, updateLastSignIn } from '@/lib/db/client';
+
+// Types for Clerk webhook data
+interface ClerkUser {
+  id: string;
+  email_addresses?: Array<{
+    id: string;
+    email_address: string;
+  }>;
+  primary_email_address_id?: string;
+  first_name?: string;
+  last_name?: string;
+  image_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface ClerkSession {
+  user_id: string;
+}
+
+interface ClerkWebhookEvent {
+  data: ClerkUser | ClerkSession;
+  type: string;
+}
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_SIGNING_SECRET;
@@ -29,7 +53,7 @@ export async function POST(req: Request) {
   // Create a new Svix instance with your secret.
   const wh = new Webhook(WEBHOOK_SECRET);
 
-  let evt: any;
+  let evt: ClerkWebhookEvent;
 
   // Verify the payload with the headers
   try {
@@ -37,7 +61,7 @@ export async function POST(req: Request) {
       "svix-id": svix_id,
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature,
-    });
+    }) as ClerkWebhookEvent;
   } catch (err) {
     console.error('Error verifying webhook:', err);
     return new Response('Error occured', {
@@ -46,7 +70,7 @@ export async function POST(req: Request) {
   }
 
   // Get the ID and type
-  const { id } = evt.data;
+  const { id } = evt.data as ClerkUser;
   const eventType = evt.type;
 
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
@@ -56,16 +80,16 @@ export async function POST(req: Request) {
   try {
     switch (eventType) {
       case 'user.created':
-        await handleUserCreated(evt.data);
+        await handleUserCreated(evt.data as ClerkUser);
         break;
       case 'user.updated':
-        await handleUserUpdated(evt.data);
+        await handleUserUpdated(evt.data as ClerkUser);
         break;
       case 'user.deleted':
-        await handleUserDeleted(evt.data);
+        await handleUserDeleted(evt.data as ClerkUser);
         break;
       case 'session.created':
-        await handleSessionCreated(evt.data);
+        await handleSessionCreated(evt.data as ClerkSession);
         break;
       default:
         console.log(`Unhandled event type: ${eventType}`);
@@ -80,91 +104,70 @@ export async function POST(req: Request) {
   return new Response('Webhook processed successfully', { status: 200 });
 }
 
-async function handleUserCreated(userData: any) {
+async function handleUserCreated(userData: ClerkUser) {
   const { id, email_addresses, first_name, last_name, image_url, created_at } = userData;
   
-  const primaryEmail = email_addresses?.find((email: any) => email.id === userData.primary_email_address_id)?.email_address;
+  const primaryEmail = email_addresses?.find((email) => email.id === userData.primary_email_address_id)?.email_address;
 
-  const { error } = await supabase
-    .from('users')
-    .insert({
-      clerk_user_id: id,
+  try {
+    await createUser({
+      clerkUserId: id,
       email: primaryEmail,
-      first_name,
-      last_name,
-      image_url,
-      created_at: new Date(created_at).toISOString(),
-      updated_at: new Date().toISOString(),
+      firstName: first_name,
+      lastName: last_name,
+      imageUrl: image_url,
+      createdAt: new Date(created_at || Date.now()),
       metadata: userData
     });
 
-  if (error) {
+    console.log(`User created: ${id}`);
+  } catch (error) {
     console.error('Error creating user:', error);
     throw error;
   }
-
-  console.log(`User created: ${id}`);
 }
 
-async function handleUserUpdated(userData: any) {
-  const { id, email_addresses, first_name, last_name, image_url, updated_at } = userData;
+async function handleUserUpdated(userData: ClerkUser) {
+  const { id, email_addresses, first_name, last_name, image_url } = userData;
   
-  const primaryEmail = email_addresses?.find((email: any) => email.id === userData.primary_email_address_id)?.email_address;
+  const primaryEmail = email_addresses?.find((email) => email.id === userData.primary_email_address_id)?.email_address;
 
-  const { error } = await supabase
-    .from('users')
-    .update({
+  try {
+    await updateUser(id, {
       email: primaryEmail,
-      first_name,
-      last_name,
-      image_url,
-      updated_at: new Date().toISOString(),
+      firstName: first_name,
+      lastName: last_name,
+      imageUrl: image_url,
       metadata: userData
-    })
-    .eq('clerk_user_id', id);
+    });
 
-  if (error) {
+    console.log(`User updated: ${id}`);
+  } catch (error) {
     console.error('Error updating user:', error);
     throw error;
   }
-
-  console.log(`User updated: ${id}`);
 }
 
-async function handleUserDeleted(userData: any) {
+async function handleUserDeleted(userData: ClerkUser) {
   const { id } = userData;
 
-  const { error } = await supabase
-    .from('users')
-    .update({
-      is_active: false,
-      updated_at: new Date().toISOString()
-    })
-    .eq('clerk_user_id', id);
-
-  if (error) {
+  try {
+    await deleteUser(id);
+    console.log(`User deleted: ${id}`);
+  } catch (error) {
     console.error('Error deleting user:', error);
     throw error;
   }
-
-  console.log(`User deleted: ${id}`);
 }
 
-async function handleSessionCreated(sessionData: any) {
+async function handleSessionCreated(sessionData: ClerkSession) {
   const { user_id } = sessionData;
 
-  const { error } = await supabase
-    .from('users')
-    .update({
-      last_sign_in_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
-    .eq('clerk_user_id', user_id);
-
-  if (error) {
+  try {
+    await updateLastSignIn(user_id);
+    console.log(`Session created for user: ${user_id}`);
+  } catch (error) {
     console.error('Error updating session:', error);
     throw error;
   }
-
-  console.log(`Session created for user: ${user_id}`);
 }

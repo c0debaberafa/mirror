@@ -1,3 +1,6 @@
+// DEPRECATED: This file is kept for backward compatibility
+// Use the new Drizzle ORM setup in lib/db/ instead
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_PROJECT_URL!;
@@ -9,8 +12,11 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Database types for TypeScript
-export interface User {
+// Re-export Drizzle types for backward compatibility
+export type { User, NewUser } from './db/schema';
+
+// Legacy interface - use Drizzle types instead
+export interface LegacyUser {
   id: string;
   clerk_user_id: string;
   email: string | null;
@@ -21,5 +27,5 @@ export interface User {
   updated_at: string;
   last_sign_in_at: string | null;
   is_active: boolean;
-  metadata: any;
+  metadata: Record<string, unknown>;
 } 

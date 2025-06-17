@@ -41,7 +41,7 @@ export default function Home() {
     }
   }, [isInitialized]);
 
-  const generateResponse = (userMessage: string): string => {
+  const generateResponse = (): string => {
     const responses = [
       "That sounds really meaningful. Can you tell me more about how that makes you feel?",
       "I appreciate you sharing that with me. It takes courage to open up.",
@@ -73,7 +73,7 @@ export default function Home() {
     setTimeout(() => {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateResponse(messageText),
+        text: generateResponse(),
         isUser: false,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
