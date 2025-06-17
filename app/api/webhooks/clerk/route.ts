@@ -3,10 +3,10 @@ import { Webhook } from 'svix';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+  const WEBHOOK_SECRET = process.env.CLERK_SIGNING_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    throw new Error('Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env');
+    throw new Error('Please add CLERK_SIGNING_SECRET from Clerk Dashboard to .env');
   }
 
   // Get the headers
@@ -167,4 +167,4 @@ async function handleSessionCreated(sessionData: any) {
   }
 
   console.log(`Session created for user: ${user_id}`);
-} 
+}
