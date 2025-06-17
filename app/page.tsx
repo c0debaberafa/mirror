@@ -5,6 +5,7 @@ import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
 import ChatHeader from './components/ChatHeader';
 import TypingIndicator from './components/TypingIndicator';
+import VapiWidget from '../components/VapiWidget';
 
 interface Message {
   id: string;
@@ -18,6 +19,10 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // VAPI configuration
+  const apiKey = process.env.NEXT_PUBLIC_VAPI_API_KEY || '';
+  const assistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || '';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -106,6 +111,14 @@ export default function Home() {
         onSendMessage={handleSendMessage} 
         disabled={isTyping}
       />
+
+      {/* VAPI Widget - only show if API key is configured */}
+      {apiKey && assistantId && (
+        <VapiWidget 
+          apiKey={apiKey}
+          assistantId={assistantId}
+        />
+      )}
     </div>
   );
 }

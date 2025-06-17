@@ -51,6 +51,22 @@ npm run db:studio
 
 For detailed database documentation, see [`lib/db/README.md`](lib/db/README.md).
 
+## Voice Assistant (VAPI)
+
+This project includes integration with [VAPI](https://vapi.ai) for real-time voice conversations with AI assistants.
+
+### VAPI Setup
+
+1. **Get VAPI Credentials**: Sign up at [vapi.ai](https://vapi.ai) and get your API key and assistant ID
+2. **Configure Environment Variables**: Add to your `.env.local`:
+   ```bash
+   NEXT_PUBLIC_VAPI_API_KEY=your_public_api_key_here
+   NEXT_PUBLIC_VAPI_ASSISTANT_ID=your_assistant_id_here
+   ```
+3. **Usage**: The voice widget will appear on the main page and at `/vapi-demo`
+
+For detailed VAPI setup instructions, see [`VAPI_SETUP.md`](VAPI_SETUP.md).
+
 ## Features
 
 - **Next.js 15** with App Router
@@ -60,6 +76,7 @@ For detailed database documentation, see [`lib/db/README.md`](lib/db/README.md).
 - **Clerk** for authentication
 - **Tailwind CSS** for styling
 - **shadcn/ui** for UI components
+- **VAPI Voice Assistant** for real-time voice conversations
 
 ## Learn More
 
