@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VoiceChat from '@/components/VoiceChat';
 import LivingEssay from '../components/LivingEssay';
 import { useUser } from '@clerk/nextjs';
-import VapiWidget from '../components/VapiWidget';
 
 interface Message {
   id: string;
@@ -153,15 +152,6 @@ export default function Home() {
         </Tabs>
       </div>
 
-      {/* VAPI Widget - only show if API key is configured */}
-      {apiKey && assistantId && (
-        <VapiWidget 
-          apiKey={apiKey}
-          assistantId={assistantId}
-          userId={userId}
-          clerkUserId={clerkUserId}
-        />
-      )}
     </div>
   );
 }
