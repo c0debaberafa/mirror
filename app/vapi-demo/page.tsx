@@ -15,7 +15,7 @@ interface User {
   updatedAt: string;
   lastSignInAt?: string;
   isActive: boolean;
-  metadata?: any;
+  metadata?: Record<string, string | number | boolean | null>;
 }
 
 export default function VapiDemoPage() {

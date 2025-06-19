@@ -67,15 +67,15 @@ export async function POST(req: NextRequest) {
     // Handle different message types
     switch (body.message.type) {
       case 'function-call':
-        await handleFunctionCall(body.message);
+        await handleFunctionCall();
         break;
         
       case 'assistant-request':
-        await handleAssistantRequest(body.message);
+        await handleAssistantRequest();
         break;
         
       case 'status-update':
-        await handleStatusUpdate(body.message);
+        await handleStatusUpdate();
         break;
         
       case 'end-of-call-report':
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         break;
         
       case 'hang':
-        await handleHang(body.message);
+        await handleHang();
         break;
         
       default:
@@ -106,15 +106,15 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleFunctionCall(_message: VapiMessage): Promise<void> {
+async function handleFunctionCall(): Promise<void> {
   // Function call handling will be implemented in the future
 }
 
-async function handleAssistantRequest(_message: VapiMessage): Promise<void> {
+async function handleAssistantRequest(): Promise<void> {
   // Assistant request handling will be implemented in the future
 }
 
-async function handleStatusUpdate(_message: VapiMessage): Promise<void> {
+async function handleStatusUpdate(): Promise<void> {
   // Status update handling will be implemented in the future
 }
 
@@ -187,6 +187,6 @@ async function handleEndOfCallReport(message: VapiMessage) {
   }
 }
 
-async function handleHang(message: VapiMessage) {
+async function handleHang(): Promise<void> {
   // Handle hang notifications if needed in the future
 } 
