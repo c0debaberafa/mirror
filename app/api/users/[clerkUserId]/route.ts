@@ -9,10 +9,10 @@ type RouteContext = {
 
 export async function GET(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { clerkUserId: string } }
 ) {
   try {
-    const { clerkUserId } = context.params;
+    const { clerkUserId } = params;
 
     if (!clerkUserId) {
       return NextResponse.json(
