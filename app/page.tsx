@@ -5,10 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VoiceChat from '@/components/VoiceChat';
 import LivingEssay from '../components/LivingEssay';
 import { useUser } from '@clerk/nextjs';
-import ChatMessage from './components/ChatMessage';
-import ChatInput from './components/ChatInput';
-import ChatHeader from './components/ChatHeader';
-import TypingIndicator from './components/TypingIndicator';
 import VapiWidget from '../components/VapiWidget';
 
 interface Message {
@@ -116,7 +112,7 @@ export default function Home() {
         <Tabs 
           defaultValue="voice-chat" 
           className="max-w-6xl mx-auto"
-          onValueChange={(value) => setActiveTab(value)}
+          onValueChange={(value: string) => setActiveTab(value)}
         >
           <div className="relative mb-8">
             <TabsList className="grid w-full grid-cols-2 relative rounded-lg p-1">
@@ -144,7 +140,7 @@ export default function Home() {
           </div>
 
           <TabsContent value="voice-chat" className="h-[calc(100vh-200px)]">
-            <VoiceChat vapiApiKey={vapiApiKey} />
+            <VoiceChat vapiApiKey={apiKey} />
           </TabsContent>
 
           <TabsContent value="living-essay" className="h-[calc(100vh-200px)]">
@@ -152,11 +148,6 @@ export default function Home() {
           </TabsContent>
         </Tabs>
       </div>
-
-      <ChatInput 
-        onSendMessage={handleSendMessage} 
-        disabled={isTyping}
-      />
 
       {/* VAPI Widget - only show if API key is configured */}
       {apiKey && assistantId && (
