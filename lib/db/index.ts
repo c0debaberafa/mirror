@@ -9,8 +9,13 @@ if (!connectionString) {
   throw new Error('Missing SUPABASE_DATABASE_URL environment variable');
 }
 
-// Create postgres client
-const client = postgres(connectionString);
+// Create postgres client with SSL and connection settings
+const client = postgres(connectionString, {
+  ssl: 'require',
+  max: 1,
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
 
 // Create drizzle instance
 export const db = drizzle(client, { schema });

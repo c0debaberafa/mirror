@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
 import ChatHeader from './components/ChatHeader';
@@ -19,6 +20,7 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { user } = useUser();
 
   // VAPI configuration
   const apiKey = process.env.NEXT_PUBLIC_VAPI_API_KEY || '';
@@ -117,6 +119,8 @@ export default function Home() {
         <VapiWidget 
           apiKey={apiKey}
           assistantId={assistantId}
+          userId={user?.id}
+          clerkUserId={user?.id}
         />
       )}
     </div>

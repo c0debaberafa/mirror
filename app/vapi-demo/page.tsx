@@ -1,9 +1,12 @@
 'use client';
 
 import React from 'react';
+import { useUser } from '@clerk/nextjs';
 import VapiWidget from '../../components/VapiWidget';
 
 export default function VapiDemoPage() {
+  const { user } = useUser();
+  
   // You'll need to set these environment variables
   const apiKey = process.env.NEXT_PUBLIC_VAPI_API_KEY || 'your_public_api_key';
   const assistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || 'your_assistant_id';
@@ -94,6 +97,8 @@ export default function VapiDemoPage() {
       <VapiWidget 
         apiKey={apiKey}
         assistantId={assistantId}
+        userId={user?.id}
+        clerkUserId={user?.id}
       />
     </div>
   );

@@ -7,6 +7,7 @@ This guide will help you set up the VAPI voice assistant feature in your applica
 1. A VAPI account (sign up at [vapi.ai](https://vapi.ai))
 2. A VAPI API key
 3. A VAPI assistant ID
+4. A webhook secret for secure webhook verification
 
 ## Setup Instructions
 
@@ -25,11 +26,21 @@ Create a `.env.local` file in your project root and add the following variables:
 # VAPI Configuration
 NEXT_PUBLIC_VAPI_API_KEY=your_public_api_key_here
 NEXT_PUBLIC_VAPI_ASSISTANT_ID=your_assistant_id_here
+VAPI_WEBHOOK_SECRET=your_webhook_secret_here
 ```
 
-Replace `your_public_api_key_here` and `your_assistant_id_here` with your actual VAPI credentials.
+Replace the values with your actual VAPI credentials:
+- `your_public_api_key_here`: Your VAPI public API key
+- `your_assistant_id_here`: Your VAPI assistant ID
+- `your_webhook_secret_here`: A secure random string for webhook verification
 
-### 3. Restart Your Development Server
+### 3. Configure Webhook in VAPI Dashboard
+
+1. In your VAPI dashboard, go to your assistant settings
+2. Set the **Server URL** to: `https://your-domain.com/api/webhooks/vapi`
+3. Set the **Webhook Secret** to the same value you used for `VAPI_WEBHOOK_SECRET`
+
+### 4. Restart Your Development Server
 
 After adding the environment variables, restart your Next.js development server:
 

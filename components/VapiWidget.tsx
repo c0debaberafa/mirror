@@ -87,7 +87,7 @@ const VapiWidget: React.FC<VapiWidgetProps> = ({
 
   const startCall = () => {
     if (vapi) {
-      vapi.start(assistantId);
+      vapi.start(assistantId, config);
     }
   };
 

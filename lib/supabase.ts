@@ -3,7 +3,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_PROJECT_URL!;
+const supabaseUrl = process.env.SUPABASE_DATABASE_URL;
 const supabaseKey = process.env.SUPABASE_API_KEY!;
 
 if (!supabaseUrl || !supabaseKey) {
