@@ -139,7 +139,12 @@ export default function Home() {
           </div>
 
           <TabsContent value="voice-chat" className="h-[calc(100vh-200px)]">
-            <VoiceChat vapiApiKey={apiKey} />
+            <VoiceChat 
+              vapiApiKey={apiKey} 
+              assistantId={assistantId}
+              userId={userId}
+              clerkUserId={clerkUserId}
+            />
           </TabsContent>
 
           <TabsContent value="living-essay" className="h-[calc(100vh-200px)]">
