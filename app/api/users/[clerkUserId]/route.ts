@@ -3,10 +3,10 @@ import { getUserByClerkId } from '@/lib/db/client';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { clerkUserId: string } }
-) {
+  context: { params: { clerkUserId: string } }
+): Promise<NextResponse> {
   try {
-    const { clerkUserId } = params;
+    const { clerkUserId } = context.params;
 
     if (!clerkUserId) {
       return NextResponse.json(
