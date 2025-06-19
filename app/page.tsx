@@ -31,7 +31,6 @@ interface User {
 export default function Home() {
   const [activeTab, setActiveTab] = useState('voice-chat');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [dbUser, setDbUser] = useState<User | null>(null);
@@ -76,7 +75,7 @@ export default function Home() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages]);
 
   // Initialize with welcome message
   useEffect(() => {

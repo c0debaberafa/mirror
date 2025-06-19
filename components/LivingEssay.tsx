@@ -1,18 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Check, X } from 'lucide-react';
 
-interface Section {
-  heading: string;
-  content: string;
-}
-
 const LivingEssay: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [editingSection, setEditingSection] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState('');
 
@@ -38,7 +32,10 @@ const LivingEssay: React.FC = () => {
     setIsLoading(true);
     // Simulate API call to regenerate essay
     setTimeout(() => {
-      setLastUpdated(new Date());
+      setSampleEssay({
+        ...sampleEssay,
+        lastUpdated: new Date()
+      });
       setIsLoading(false);
     }, 2000);
   };
