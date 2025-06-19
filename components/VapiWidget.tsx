@@ -4,6 +4,8 @@ import Vapi from '@vapi-ai/web';
 interface VapiWidgetProps {
   apiKey: string;
   assistantId: string;
+  userId?: string;
+  clerkUserId?: string;
   config?: Record<string, unknown>;
 }
 
@@ -16,6 +18,8 @@ interface TranscriptMessage {
 const VapiWidget: React.FC<VapiWidgetProps> = ({ 
   apiKey, 
   assistantId, 
+  userId,
+  clerkUserId,
   config = {} 
 }) => {
   const [vapi, setVapi] = useState<Vapi | null>(null);
@@ -29,24 +33,20 @@ const VapiWidget: React.FC<VapiWidgetProps> = ({
 
     // Event listeners
     vapiInstance.on('call-start', () => {
-      console.log('Call started');
       setIsConnected(true);
       setTranscript([]); // Clear transcript on new call
     });
 
     vapiInstance.on('call-end', () => {
-      console.log('Call ended');
       setIsConnected(false);
       setIsSpeaking(false);
     });
 
     vapiInstance.on('speech-start', () => {
-      console.log('Assistant started speaking');
       setIsSpeaking(true);
     });
 
     vapiInstance.on('speech-end', () => {
-      console.log('Assistant stopped speaking');
       setIsSpeaking(false);
     });
 
@@ -87,7 +87,23 @@ const VapiWidget: React.FC<VapiWidgetProps> = ({
 
   const startCall = () => {
     if (vapi) {
-      vapi.start(assistantId, config);
+      // Create assistant overrides with user information
+      const assistantOverrides = {
+        ...config,
+        recordingEnabled: false,
+        variableValues: {
+          ...(config.variableValues as Record<string, any> || {}),
+          userId: userId || 'anonymous',
+          clerkUserId: clerkUserId || 'anonymous',
+        },
+        metadata: {
+          ...(config.metadata as Record<string, any> || {}),
+          userId: userId,
+          clerkUserId: clerkUserId,
+        }
+      };
+      
+      vapi.start(assistantId, assistantOverrides);
     }
   };
 

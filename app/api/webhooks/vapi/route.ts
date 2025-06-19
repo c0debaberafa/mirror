@@ -102,22 +102,48 @@ async function handleEndOfCallReport(message: VapiMessage) {
     // Check if we already have this call in the database
     const existingCall = await getCallSummaryByCallId(message.call.id);
     if (existingCall) {
-      // Call already exists, don't duplicate
       return;
     }
 
-    // Extract user ID from the call data if available
-    // VAPI might include user info in the call object or metadata
+    // Extract user ID from multiple possible locations in the call data
     let userId = null;
     let clerkUserId = null;
     
-    if (message.call.user?.id) {
-      userId = message.call.user.id;
+    // Check call.assistantOverrides first (most reliable)
+    if (message.call.assistantOverrides?.metadata?.userId) {
+      userId = message.call.assistantOverrides.metadata.userId;
+    }
+    if (message.call.assistantOverrides?.metadata?.clerkUserId) {
+      clerkUserId = message.call.assistantOverrides.metadata.clerkUserId;
     }
     
-    // Try to find user by Clerk ID if available
-    if (message.call.metadata?.clerkUserId) {
-      clerkUserId = message.call.metadata.clerkUserId;
+    // Check call.assistantOverrides.variableValues
+    if (!userId && message.call.assistantOverrides?.variableValues?.userId) {
+      userId = message.call.assistantOverrides.variableValues.userId;
+    }
+    if (!clerkUserId && message.call.assistantOverrides?.variableValues?.clerkUserId) {
+      clerkUserId = message.call.assistantOverrides.variableValues.clerkUserId;
+    }
+    
+    // Check assistant.variableValues (fallback)
+    if (!userId && message.assistant?.variableValues?.userId) {
+      userId = message.assistant.variableValues.userId;
+    }
+    if (!clerkUserId && message.assistant?.variableValues?.clerkUserId) {
+      clerkUserId = message.assistant.variableValues.clerkUserId;
+    }
+    
+    // Check assistant.metadata (fallback)
+    if (!userId && message.assistant?.metadata?.userId) {
+      userId = message.assistant.metadata.userId;
+    }
+    if (!clerkUserId && message.assistant?.metadata?.clerkUserId) {
+      clerkUserId = message.assistant.metadata.clerkUserId;
+    }
+    
+    // Check call.user.id (legacy fallback)
+    if (!userId && message.call.user?.id) {
+      userId = message.call.user.id;
     }
 
     // Store the call summary in the database

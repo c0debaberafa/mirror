@@ -22,6 +22,28 @@ export async function updateUser(clerkUserId: string, userData: Partial<NewUser>
   return result[0] || null;
 }
 
+export async function upsertUser(clerkUserId: string, userData: Partial<NewUser>): Promise<User> {
+  // First try to update the existing user
+  const existingUser = await updateUser(clerkUserId, userData);
+  
+  if (existingUser) {
+    return existingUser;
+  }
+  
+  // If user doesn't exist, create a new one
+  const newUserData: NewUser = {
+    clerkUserId,
+    email: userData.email,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    imageUrl: userData.imageUrl,
+    createdAt: userData.createdAt || new Date(),
+    metadata: userData.metadata,
+  };
+  
+  return await createUser(newUserData);
+}
+
 export async function deleteUser(clerkUserId: string): Promise<User | null> {
   const result = await db.update(users)
     .set({ isActive: false, updatedAt: new Date() })

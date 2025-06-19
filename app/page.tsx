@@ -15,16 +15,64 @@ interface Message {
   timestamp: string;
 }
 
+interface User {
+  id: string;
+  clerkUserId: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  lastSignInAt?: string;
+  isActive: boolean;
+  metadata?: any;
+}
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [dbUser, setDbUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useUser();
 
   // VAPI configuration
   const apiKey = process.env.NEXT_PUBLIC_VAPI_API_KEY || '';
   const assistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || '';
+
+  // Get the full Clerk user ID
+  const clerkUserId = user?.id;
+  
+  // Fetch user data from database
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!clerkUserId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/users/${clerkUserId}`);
+        if (response.ok) {
+          const userData = await response.json();
+          setDbUser(userData);
+        } else {
+          console.error('Failed to fetch user data:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [clerkUserId]);
+
+  // Use the database userId if available, otherwise fall back to clerkUserId
+  const userId = dbUser?.id || clerkUserId;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -119,8 +167,8 @@ export default function Home() {
         <VapiWidget 
           apiKey={apiKey}
           assistantId={assistantId}
-          userId={user?.id}
-          clerkUserId={user?.id}
+          userId={userId}
+          clerkUserId={clerkUserId}
         />
       )}
     </div>

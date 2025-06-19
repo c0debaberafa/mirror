@@ -58,12 +58,111 @@ The VAPI widget will automatically appear on the main page (bottom right corner)
 
 Visit `/vapi-demo` to see a dedicated page with the VAPI widget and detailed instructions.
 
+## User Tracking and Call Reports
+
+### Automatic User Association
+
+The VAPI widget automatically associates calls with authenticated users:
+
+- **Authenticated Users**: When a user is signed in with Clerk, their user ID is automatically passed to VAPI
+- **Anonymous Users**: Calls from unauthenticated users are marked as "anonymous"
+- **User Data**: Both `userId` and `clerkUserId` are passed to VAPI via `assistantOverrides`
+
+### End-of-Call Reports
+
+The system automatically prints complete end-of-call reports for debugging and analysis:
+
+#### Client-Side Logging
+When a call ends, the entire report is logged to the browser console:
+```javascript
+=== ENTIRE END OF CALL REPORT ===
+{
+  "call": {
+    "id": "call_123",
+    "status": "ended",
+    "variableValues": {
+      "userId": "user_456",
+      "clerkUserId": "user_456"
+    },
+    "metadata": {
+      "userId": "user_456",
+      "clerkUserId": "user_456"
+    }
+  },
+  "summary": "Call summary...",
+  "transcript": "Full conversation transcript...",
+  "messages": [...]
+}
+=== END OF CALL REPORT ===
+```
+
+#### Server-Side Logging
+The webhook handler also logs the complete report:
+```javascript
+=== ENTIRE END OF CALL REPORT (WEBHOOK) ===
+{
+  "message": {
+    "type": "end-of-call-report",
+    "call": {...},
+    "summary": "...",
+    "transcript": "...",
+    "messages": [...]
+  }
+}
+=== END OF CALL REPORT (WEBHOOK) ===
+```
+
+### Database Storage
+
+All call data is automatically stored in the database with user associations:
+
+- **Call ID**: Unique VAPI call identifier
+- **User ID**: Associated user (if authenticated)
+- **Clerk User ID**: Clerk user identifier for easy queries
+- **Full Call Data**: Complete call object stored as JSON
+- **Transcript & Summary**: Conversation text and AI summary
+- **Metadata**: User information, assistant ID, recording URL, etc.
+
+### Example Usage
+
+The VAPI widget automatically handles user tracking:
+
+```typescript
+// The widget automatically passes user information
+<VapiWidget 
+  apiKey={apiKey}
+  assistantId={assistantId}
+  userId={user?.id}        // Clerk user ID
+  clerkUserId={user?.id}   // Same as userId for consistency
+/>
+```
+
+When a call starts, the user information is passed to VAPI:
+```typescript
+const assistantOverrides = {
+  recordingEnabled: false,
+  variableValues: {
+    userId: userId || 'anonymous',
+    clerkUserId: clerkUserId || 'anonymous',
+  },
+  metadata: {
+    userId: userId,
+    clerkUserId: clerkUserId,
+  }
+};
+
+vapi.start(assistantId, assistantOverrides);
+```
+
 ## Features
 
 - **Real-time Voice Conversations**: Talk naturally with your AI assistant
 - **Visual Feedback**: See when the assistant is listening or speaking
 - **Conversation History**: View the transcript of your conversation
 - **Easy Controls**: Simple start/stop functionality
+- **User Tracking**: Automatic association of calls with authenticated users
+- **Complete Call Reports**: Full logging of all call data for analysis
+- **Database Storage**: Persistent storage of all call information
 
 ## Troubleshooting
 
@@ -86,6 +185,13 @@ Visit `/vapi-demo` to see a dedicated page with the VAPI widget and detailed ins
 2. Check that your VAPI account has sufficient credits
 3. Ensure your assistant is properly configured in the VAPI dashboard
 
+### User Tracking Issues
+
+1. Check browser console for end-of-call reports
+2. Verify webhook logs in your server console
+3. Check database for stored call data
+4. Ensure Clerk authentication is working properly
+
 ## API Reference
 
 The VAPI widget uses the following events:
@@ -95,6 +201,7 @@ The VAPI widget uses the following events:
 - `speech-start`: Triggered when the assistant starts speaking
 - `speech-end`: Triggered when the assistant stops speaking
 - `message`: Triggered when a transcript message is received
+- `end-of-call-report`: Triggered when a call ends (prints full report)
 - `error`: Triggered when an error occurs
 
 ## Customization
