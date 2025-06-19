@@ -92,12 +92,12 @@ const VapiWidget: React.FC<VapiWidgetProps> = ({
         ...config,
         recordingEnabled: false,
         variableValues: {
-          ...(config.variableValues as Record<string, any> || {}),
+          ...(config.variableValues as Record<string, unknown> || {}),
           userId: userId || 'anonymous',
           clerkUserId: clerkUserId || 'anonymous',
         },
         metadata: {
-          ...(config.metadata as Record<string, any> || {}),
+          ...(config.metadata as Record<string, unknown> || {}),
           userId: userId,
           clerkUserId: clerkUserId,
         }

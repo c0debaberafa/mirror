@@ -26,7 +26,7 @@ interface User {
   updatedAt: string;
   lastSignInAt?: string;
   isActive: boolean;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export default function Home() {
@@ -35,7 +35,6 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [dbUser, setDbUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useUser();
 
   // VAPI configuration
@@ -49,7 +48,6 @@ export default function Home() {
   useEffect(() => {
     const fetchUser = async () => {
       if (!clerkUserId) {
-        setIsLoading(false);
         return;
       }
 
@@ -63,8 +61,6 @@ export default function Home() {
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 

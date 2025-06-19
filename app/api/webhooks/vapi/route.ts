@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { createCallSummary, getCallSummaryByCallId } from '@/lib/db/client';
 
 // Types for Vapi webhook data
@@ -7,7 +6,20 @@ interface VapiCall {
   id: string;
   status: string;
   endedReason?: string;
-  [key: string]: any; // Allow for additional properties
+  assistantId: string;
+  assistantOverrides?: {
+    metadata?: {
+      userId?: string;
+      clerkUserId?: string;
+    };
+    variableValues?: {
+      userId?: string;
+      clerkUserId?: string;
+    };
+  };
+  user?: {
+    id?: string;
+  };
 }
 
 interface VapiFunctionCall {
@@ -28,7 +40,16 @@ interface VapiMessage {
     role: string;
     message: string;
   }>;
-  [key: string]: any; // Allow for additional properties
+  assistant?: {
+    variableValues?: {
+      userId?: string;
+      clerkUserId?: string;
+    };
+    metadata?: {
+      userId?: string;
+      clerkUserId?: string;
+    };
+  };
 }
 
 interface VapiWebhookPayload {
@@ -85,16 +106,16 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleFunctionCall(message: VapiMessage) {
-  // Handle function calls if needed in the future
+async function handleFunctionCall(_message: VapiMessage): Promise<void> {
+  // Function call handling will be implemented in the future
 }
 
-async function handleAssistantRequest(message: VapiMessage) {
-  // Handle assistant requests if needed in the future
+async function handleAssistantRequest(_message: VapiMessage): Promise<void> {
+  // Assistant request handling will be implemented in the future
 }
 
-async function handleStatusUpdate(message: VapiMessage) {
-  // Handle status updates if needed in the future
+async function handleStatusUpdate(_message: VapiMessage): Promise<void> {
+  // Status update handling will be implemented in the future
 }
 
 async function handleEndOfCallReport(message: VapiMessage) {

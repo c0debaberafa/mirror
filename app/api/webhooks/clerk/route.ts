@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
-import { createUser, updateUser, deleteUser, updateLastSignIn, upsertUser } from '@/lib/db/client';
+import { createUser, deleteUser, updateLastSignIn, upsertUser } from '@/lib/db/client';
 
 // Types for Clerk webhook data
 interface ClerkUser {
