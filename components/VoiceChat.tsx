@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+
+import Vapi from '@vapi-ai/web';
 
 interface Message {
   id: string;
@@ -10,33 +11,161 @@ interface Message {
   timestamp: Date;
 }
 
-interface VoiceChatProps {
-  vapiApiKey?: string;
+interface QueuedMessage {
+  timestamp: Date;
+  content: {
+    type: string;
+    role: string;
+    transcript: string;
+  };
 }
 
-const VoiceChat: React.FC<VoiceChatProps> = ({ vapiApiKey }) => {
+interface VoiceChatProps {
+  vapiApiKey?: string;
+  assistantId?: string;
+  userId?: string;
+  clerkUserId?: string;
+}
+
+const VoiceChat: React.FC<VoiceChatProps> = ({ 
+  vapiApiKey,
+  assistantId,
+  userId,
+  clerkUserId
+}) => {
+  const [vapi, setVapi] = useState<Vapi | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: "Hello! I'm Fred, your AI companion. I'm here to listen and support you through our conversation. How are you feeling today?",
-      isUser: false,
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  // Used for managing voice chat state updates
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  useEffect(() => {
+    if (vapiApiKey) {
+      const vapiInstance = new Vapi(vapiApiKey);
+      setVapi(vapiInstance);
+
+      let lastEventTime = Date.now();
+      let messageQueue: QueuedMessage[] = [];
+
+      // Event listeners
+      vapiInstance.on('call-start', () => {
+        const now = Date.now();
+        console.log('Call started, time since last event:', now - lastEventTime, 'ms');
+        lastEventTime = now;
+        setIsActive(true);
+        setIsListening(true);
+        setCurrentTranscript('');
+        messageQueue = []; // Reset queue on new call
+      });
+
+      vapiInstance.on('call-end', () => {
+        const now = Date.now();
+        console.log('Call ended, time since last event:', now - lastEventTime, 'ms');
+        lastEventTime = now;
+        console.log('Final message queue:', messageQueue);
+        setIsActive(false);
+        setIsListening(false);
+        setIsSpeaking(false);
+        setCurrentTranscript('');
+      });
+
+      vapiInstance.on('speech-start', () => {
+        const now = Date.now();
+        console.log('Speech started, time since last event:', now - lastEventTime, 'ms');
+        lastEventTime = now;
+        setIsSpeaking(true);
+        setIsListening(false);
+      });
+
+      vapiInstance.on('speech-end', () => {
+        const now = Date.now();
+        console.log('Speech ended, time since last event:', now - lastEventTime, 'ms');
+        lastEventTime = now;
+        setIsSpeaking(false);
+        setIsListening(true);
+      });
+
+      vapiInstance.on('message', (message) => {
+        const now = Date.now();
+        console.log('Message received:', {
+          timeSinceLastEvent: now - lastEventTime,
+          type: message.type,
+          role: message.role,
+          transcript: message.transcript,
+          raw: message
+        });
+        lastEventTime = now;
+
+        if (message.type === 'transcript') {
+          // Only process messages with actual transcript content
+          if (!message.transcript) return;
+
+          messageQueue.push({
+            timestamp: new Date(),
+            content: message
+          });
+          
+          if (message.role === 'user') {
+            console.log('User message queue:', messageQueue.filter(m => m.content.role === 'user'));
+            setCurrentTranscript(message.transcript);
+          } else {
+            console.log('Assistant message queue:', messageQueue.filter(m => m.content.role === 'assistant'));
+            
+            // Check if this is a new complete message or just an update
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessage && !message.transcript.includes(lastMessage.text)) {
+              // This is a new message, add it to the state
+              setMessages(prev => {
+                const newMessages = [...prev, {
+                  id: Date.now().toString(),
+                  text: message.transcript,
+                  isUser: false,
+                  timestamp: new Date()
+                }];
+                console.log('Updated messages state:', newMessages);
+                return newMessages;
+              });
+            } else if (!lastMessage) {
+              // This is the first message
+              setMessages([{
+                id: Date.now().toString(),
+                text: message.transcript,
+                isUser: false,
+                timestamp: new Date()
+              }]);
+            }
+            // If it's just an update to the last message, ignore it
+            setCurrentTranscript('');
+          }
+        }
+      });
+
+      vapiInstance.on('error', (error) => {
+        const now = Date.now();
+        console.error('Vapi error:', error, 'time since last event:', now - lastEventTime, 'ms');
+        lastEventTime = now;
+        setError('An error occurred with the voice chat. Please try again.');
+      });
+
+      return () => {
+        console.log('Cleaning up Vapi instance, final message queue:', messageQueue);
+        vapiInstance?.stop();
+      };
+    }
+  }, [vapiApiKey, messages]);
+
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   const handleStartCall = async () => {
     if (!vapiApiKey) {
@@ -44,44 +173,34 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ vapiApiKey }) => {
       return;
     }
 
+    if (!assistantId) {
+      setError("Please provide a Vapi assistant ID to start the voice chat.");
+      return;
+    }
+
     setError(null);
-    console.log("Starting Vapi call with API key:", vapiApiKey);
-    setIsActive(true);
-    setIsListening(true);
     
-    // Simulate conversation flow for demo
-    setTimeout(() => {
-      setIsListening(false);
-      setIsSpeaking(true);
+    if (vapi) {
+      const assistantOverrides = {
+        recordingEnabled: false,
+        variableValues: {
+          userId: userId || 'anonymous',
+          clerkUserId: clerkUserId || 'anonymous',
+        },
+        metadata: {
+          userId: userId,
+          clerkUserId: clerkUserId,
+        }
+      };
       
-      setTimeout(() => {
-        setIsSpeaking(false);
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          text: "I understand. It sounds like you're going through a challenging time. Would you like to talk more about what's been on your mind?",
-          isUser: false,
-          timestamp: new Date()
-        }]);
-      }, 2000);
-    }, 3000);
+      vapi.start(assistantId, assistantOverrides);
+    }
   };
 
   const handleEndCall = () => {
-    setIsListening(false);
-    setIsSpeaking(false);
-    setIsActive(false);
-    setCurrentTranscript('');
-    console.log("Ending Vapi call");
-  };
-
-  const addUserMessage = (text: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text,
-      isUser: true,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, newMessage]);
+    if (vapi) {
+      vapi.stop();
+    }
   };
 
   return (
@@ -102,7 +221,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ vapiApiKey }) => {
         )}
 
         {/* Central Logo/Control */}
-        <div className="flex justify-center mb-8 mt-8">
+        <div className="flex flex-col items-center justify-center mb-8 mt-8">
           {!isActive ? (
             // Initial single circle state
             <div 
@@ -112,72 +231,39 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ vapiApiKey }) => {
               <div className="w-16 h-16 bg-brand-secondary rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
             </div>
           ) : (
-            // Active ellipsis logo state
-            <div className="flex items-center justify-center space-x-2">
-              <div className={`w-16 h-16 rounded-full transition-all duration-700 ${
-                isListening ? 'bg-brand-secondary listening-pulse' :
-                isSpeaking ? 'bg-brand-highlight speaking-pulse' :
-                'bg-brand-tertiary'
-              }`}></div>
-              <div className={`w-16 h-16 rounded-full transition-all duration-700 delay-150 ${
-                isListening ? 'bg-brand-secondary listening-pulse' :
-                isSpeaking ? 'bg-brand-highlight speaking-pulse' :
-                'bg-brand-tertiary'
-              }`}></div>
-              <div className={`w-16 h-16 rounded-full transition-all duration-700 delay-300 ${
-                isListening ? 'bg-brand-secondary listening-pulse' :
-                isSpeaking ? 'bg-brand-highlight speaking-pulse' :
-                'bg-brand-tertiary'
-              }`}></div>
-            </div>
+            <>
+              {/* Active ellipsis logo state */}
+              <div className="flex items-center justify-center space-x-2 mb-8">
+                <div className={`w-16 h-16 rounded-full transition-all duration-700 ${
+                  isListening ? 'bg-brand-secondary listening-pulse' :
+                  isSpeaking ? 'bg-brand-highlight speaking-pulse' :
+                  'bg-brand-tertiary'
+                }`}></div>
+                <div className={`w-16 h-16 rounded-full transition-all duration-700 delay-150 ${
+                  isListening ? 'bg-brand-secondary listening-pulse' :
+                  isSpeaking ? 'bg-brand-highlight speaking-pulse' :
+                  'bg-brand-tertiary'
+                }`}></div>
+                <div className={`w-16 h-16 rounded-full transition-all duration-700 delay-300 ${
+                  isListening ? 'bg-brand-secondary listening-pulse' :
+                  isSpeaking ? 'bg-brand-highlight speaking-pulse' :
+                  'bg-brand-tertiary'
+                }`}></div>
+              </div>
+
+              {/* Fred's latest message */}
+              <div className="text-center max-w-2xl mx-auto">
+                <p className="text-2xl font-light text-brand-primary leading-relaxed">
+                  {messages.length > 0 ? messages[messages.length - 1].text : ''}
+                </p>
+              </div>
+            </>
           )}
         </div>
 
-        {/* Conversation History - Only show when active */}
-        {isActive && (
-          <div className="flex-1 overflow-hidden mb-6">
-            <Card className="h-full bg-white/60 backdrop-blur-sm border-brand-tertiary">
-              <div className="h-full overflow-y-auto p-4 space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                        message.isUser
-                          ? 'bg-brand-secondary text-white'
-                          : 'bg-white border border-brand-tertiary text-brand-primary'
-                      }`}
-                    >
-                      <p className="font-inter text-sm leading-relaxed">{message.text}</p>
-                      <span className={`text-xs mt-1 block ${
-                        message.isUser ? 'text-white/70' : 'text-brand-tertiary'
-                      }`}>
-                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Live transcript */}
-                {currentTranscript && (
-                  <div className="flex justify-end">
-                    <div className="max-w-[80%] rounded-lg px-4 py-3 bg-brand-secondary/50 border border-brand-secondary">
-                      <p className="font-inter text-sm text-brand-primary italic">{currentTranscript}</p>
-                    </div>
-                  </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
-            </Card>
-          </div>
-        )}
-
         {/* End Chat Button - Only show when active */}
         {isActive && (
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-8">
             <Button
               onClick={handleEndCall}
               variant="outline"
@@ -185,20 +271,6 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ vapiApiKey }) => {
             >
               <X className="w-4 h-4 mr-2" />
               End Chat
-            </Button>
-          </div>
-        )}
-
-        {/* Demo buttons for testing - Only show when active */}
-        {isActive && (
-          <div className="mt-4 flex justify-center space-x-2">
-            <Button
-              onClick={() => addUserMessage("I've been feeling anxious lately about work.")}
-              variant="ghost"
-              size="sm"
-              className="text-brand-tertiary hover:text-brand-primary"
-            >
-              Demo: Add User Message
             </Button>
           </div>
         )}

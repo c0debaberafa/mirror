@@ -5,11 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VoiceChat from '@/components/VoiceChat';
 import LivingEssay from '../components/LivingEssay';
 import { useUser } from '@clerk/nextjs';
-import ChatMessage from './components/ChatMessage';
-import ChatInput from './components/ChatInput';
-import ChatHeader from './components/ChatHeader';
-import TypingIndicator from './components/TypingIndicator';
-import VapiWidget from '../components/VapiWidget';
 
 interface Message {
   id: string;
@@ -35,7 +30,6 @@ interface User {
 export default function Home() {
   const [activeTab, setActiveTab] = useState('voice-chat');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [dbUser, setDbUser] = useState<User | null>(null);
@@ -80,7 +74,7 @@ export default function Home() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages]);
 
   // Initialize with welcome message
   useEffect(() => {
@@ -116,7 +110,7 @@ export default function Home() {
         <Tabs 
           defaultValue="voice-chat" 
           className="max-w-6xl mx-auto"
-          onValueChange={(value) => setActiveTab(value)}
+          onValueChange={(value: string) => setActiveTab(value)}
         >
           <div className="relative mb-8">
             <TabsList className="grid w-full grid-cols-2 relative rounded-lg p-1">
@@ -144,7 +138,12 @@ export default function Home() {
           </div>
 
           <TabsContent value="voice-chat" className="h-[calc(100vh-200px)]">
-            <VoiceChat vapiApiKey={vapiApiKey} />
+            <VoiceChat 
+              vapiApiKey={apiKey} 
+              assistantId={assistantId}
+              userId={userId}
+              clerkUserId={clerkUserId}
+            />
           </TabsContent>
 
           <TabsContent value="living-essay" className="h-[calc(100vh-200px)]">
@@ -153,20 +152,6 @@ export default function Home() {
         </Tabs>
       </div>
 
-      <ChatInput 
-        onSendMessage={handleSendMessage} 
-        disabled={isTyping}
-      />
-
-      {/* VAPI Widget - only show if API key is configured */}
-      {apiKey && assistantId && (
-        <VapiWidget 
-          apiKey={apiKey}
-          assistantId={assistantId}
-          userId={userId}
-          clerkUserId={clerkUserId}
-        />
-      )}
     </div>
   );
 }
