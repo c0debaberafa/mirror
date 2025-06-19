@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserByClerkId } from '@/lib/db/client';
 
+type RouteContext = {
+  params: {
+    clerkUserId: string;
+  };
+};
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { clerkUserId: string } }
+  context: RouteContext
 ) {
   try {
-    const { clerkUserId } = params;
+    const { clerkUserId } = context.params;
 
     if (!clerkUserId) {
       return NextResponse.json(
