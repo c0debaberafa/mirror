@@ -157,7 +157,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         vapiInstance?.stop();
       };
     }
-  }, [vapiApiKey, messages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vapiApiKey]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
