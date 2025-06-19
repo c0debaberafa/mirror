@@ -4,11 +4,19 @@ import animate from "tailwindcss-animate";
 export default {
     darkMode: ['class'],
     content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
   ],
   theme: {
+  	container: {
+  		center: true,
+  		padding: "2rem",
+  		screens: {
+  			"2xl": "1400px",
+  		},
+  	},
   	extend: {
   		borderRadius: {
   			lg: 'var(--radius)',
@@ -16,6 +24,13 @@ export default {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			brand: {
+  				primary: '#2F3E4D',
+  				secondary: '#7CAAC8',
+  				tertiary: '#B8C0C8',
+  				highlight: '#E89C94',
+  				background: '#FAF9F7',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -65,13 +80,28 @@ export default {
         'message': '0 2px 4px rgba(0, 0, 0, 0.1)',
       },
       keyframes: {
-        'gentle-bounce': {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-4px)' },
-        }
+        'accordion-down': {
+          from: { height: 0 },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        'accordion-up': {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: 0 },
+        },
+        'listening-pulse': {
+          '0%, 100%': { transform: 'scale(1)', opacity: 1 },
+          '50%': { transform: 'scale(1.1)', opacity: 0.8 },
+        },
+        'speaking-pulse': {
+          '0%, 100%': { transform: 'scale(1)', opacity: 1 },
+          '50%': { transform: 'scale(1.1)', opacity: 0.8 },
+        },
       },
       animation: {
-        'gentle-bounce': 'gentle-bounce 0.5s ease-in-out',
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        'listening-pulse': 'listening-pulse 2s ease-in-out infinite',
+        'speaking-pulse': 'speaking-pulse 2s ease-in-out infinite',
       }
   	}
   },
