@@ -1,13 +1,100 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VoiceChat from '@/components/VoiceChat';
 import LivingEssay from '../components/LivingEssay';
+import { useUser } from '@clerk/nextjs';
+import ChatMessage from './components/ChatMessage';
+import ChatInput from './components/ChatInput';
+import ChatHeader from './components/ChatHeader';
+import TypingIndicator from './components/TypingIndicator';
+import VapiWidget from '../components/VapiWidget';
+
+interface Message {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: string;
+}
+
+interface User {
+  id: string;
+  clerkUserId: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  lastSignInAt?: string;
+  isActive: boolean;
+  metadata?: Record<string, unknown>;
+}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('voice-chat');
-  const vapiApiKey = process.env.NEXT_PUBLIC_VAPI_API_KEY;
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [dbUser, setDbUser] = useState<User | null>(null);
+  const { user } = useUser();
+
+  // VAPI configuration
+  const apiKey = process.env.NEXT_PUBLIC_VAPI_API_KEY || '';
+  const assistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || '';
+
+  // Get the full Clerk user ID
+  const clerkUserId = user?.id;
+  
+  // Fetch user data from database
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!clerkUserId) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/users/${clerkUserId}`);
+        if (response.ok) {
+          const userData = await response.json();
+          setDbUser(userData);
+        } else {
+          console.error('Failed to fetch user data:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUser();
+  }, [clerkUserId]);
+
+  // Use the database userId if available, otherwise fall back to clerkUserId
+  const userId = dbUser?.id || clerkUserId;
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  // Initialize with welcome message
+  useEffect(() => {
+    if (!isInitialized) {
+      const welcomeMessage: Message = {
+        id: '1',
+        text: "Hello! I'm your AI companion. I'm here to listen, chat, and support you. How are you feeling today?",
+        isUser: false,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages([welcomeMessage]);
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
 
   return (
     <div className="min-h-screen bg-brand-background relative">
@@ -65,6 +152,21 @@ export default function Home() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ChatInput 
+        onSendMessage={handleSendMessage} 
+        disabled={isTyping}
+      />
+
+      {/* VAPI Widget - only show if API key is configured */}
+      {apiKey && assistantId && (
+        <VapiWidget 
+          apiKey={apiKey}
+          assistantId={assistantId}
+          userId={userId}
+          clerkUserId={clerkUserId}
+        />
+      )}
     </div>
   );
 }

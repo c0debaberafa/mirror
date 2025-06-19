@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
-import { createUser, updateUser, deleteUser, updateLastSignIn } from '@/lib/db/client';
+import { createUser, deleteUser, updateLastSignIn, upsertUser } from '@/lib/db/client';
 
 // Types for Clerk webhook data
 interface ClerkUser {
@@ -133,7 +133,7 @@ async function handleUserUpdated(userData: ClerkUser) {
   const primaryEmail = email_addresses?.find((email) => email.id === userData.primary_email_address_id)?.email_address;
 
   try {
-    await updateUser(id, {
+    await upsertUser(id, {
       email: primaryEmail,
       firstName: first_name,
       lastName: last_name,
@@ -141,9 +141,9 @@ async function handleUserUpdated(userData: ClerkUser) {
       metadata: userData
     });
 
-    console.log(`User updated: ${id}`);
+    console.log(`User upserted: ${id}`);
   } catch (error) {
-    console.error('Error updating user:', error);
+    console.error('Error upserting user:', error);
     throw error;
   }
 }

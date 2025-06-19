@@ -1,12 +1,63 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 import VapiWidget from '../../components/VapiWidget';
 
+interface User {
+  id: string;
+  clerkUserId: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  lastSignInAt?: string;
+  isActive: boolean;
+  metadata?: any;
+}
+
 export default function VapiDemoPage() {
+  const { user } = useUser();
+  const [dbUser, setDbUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
   // You'll need to set these environment variables
   const apiKey = process.env.NEXT_PUBLIC_VAPI_API_KEY || 'your_public_api_key';
   const assistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || 'your_assistant_id';
+
+  // Get the full Clerk user ID
+  const clerkUserId = user?.id;
+  
+  // Fetch user data from database
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!clerkUserId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/users/${clerkUserId}`);
+        if (response.ok) {
+          const userData = await response.json();
+          setDbUser(userData);
+        } else {
+          console.error('Failed to fetch user data:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [clerkUserId]);
+
+  // Use the database userId if available, otherwise fall back to clerkUserId
+  const userId = dbUser?.id || clerkUserId;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
@@ -86,6 +137,19 @@ export default function VapiDemoPage() {
                 <li>• The widget will appear in the bottom right corner of this page</li>
               </ul>
             </div>
+
+            {/* User Information Display */}
+            {!isLoading && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-medium text-blue-800 mb-2">👤 User Information</h4>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <div><strong>Clerk User ID:</strong> {clerkUserId || 'Not available'}</div>
+                  <div><strong>Database User ID:</strong> {dbUser?.id || 'Not found in database'}</div>
+                  <div><strong>Email:</strong> {dbUser?.email || 'Not available'}</div>
+                  <div><strong>Name:</strong> {dbUser?.firstName && dbUser?.lastName ? `${dbUser.firstName} ${dbUser.lastName}` : 'Not available'}</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -94,6 +158,8 @@ export default function VapiDemoPage() {
       <VapiWidget 
         apiKey={apiKey}
         assistantId={assistantId}
+        userId={userId}
+        clerkUserId={clerkUserId}
       />
     </div>
   );
