@@ -16,8 +16,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Mirror AI",
-  description: "Your AI companion",
+  title: "Fred",
+  description: "Your AI Reflection",
 };
 
 export default function RootLayout({
@@ -31,7 +31,7 @@ export default function RootLayout({
         <body className={`${inter.variable} antialiased`}>
           <header className="p-4 border-b">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <h1 className="text-xl font-bold">Mirror AI</h1>
+              <h1 className="text-xl font-bold">Fred</h1>
               <div className="flex items-center gap-4">
                 <SignedOut>
                   <SignInButton />
