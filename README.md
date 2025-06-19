@@ -31,6 +31,7 @@ SUPABASE_PROJECT_URL=your_supabase_project_url
 SUPABASE_API_KEY=your_supabase_api_key
 SUPABASE_DATABASE_URL=postgresql://postgres:[password]@[host]:5432/postgres
 CLERK_SIGNING_SECRET=your_clerk_signing_secret
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 ### Database Operations
