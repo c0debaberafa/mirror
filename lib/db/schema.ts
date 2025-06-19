@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, jsonb, uuid, integer, doublePrecision, foreignKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, jsonb, uuid, integer, doublePrecision } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -47,6 +47,7 @@ export const livingEssays = pgTable('living_essays', {
   version: integer('version').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   sections: jsonb('sections').notNull(), // EssaySection[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   previousVersionId: uuid('previous_version_id').references((): any => livingEssays.id),
   delta: jsonb('delta'), // Optional delta information
 });

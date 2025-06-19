@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+
 import Vapi from '@vapi-ai/web';
 
 interface Message {
@@ -37,6 +37,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  // Used for managing voice chat state updates
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -155,15 +157,15 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         vapiInstance?.stop();
       };
     }
-  }, [vapiApiKey]);
+  }, [vapiApiKey, messages]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   const handleStartCall = async () => {
     if (!vapiApiKey) {
@@ -199,16 +201,6 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
     if (vapi) {
       vapi.stop();
     }
-  };
-
-  const addUserMessage = (text: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text,
-      isUser: true,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, newMessage]);
   };
 
   return (

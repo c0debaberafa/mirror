@@ -1,6 +1,6 @@
 import { db } from './index';
 import { livingEssays, tidbits, essayTidbits, users } from './schema';
-import { eq, desc, and, lte, sql } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { diffChars } from 'diff';
 
 export interface EssaySection {
@@ -176,44 +176,6 @@ export async function updateTidbitRelevance(tidbitId: string, relevanceScore: nu
       lastUsedAt: sql`CURRENT_TIMESTAMP`,
     })
     .where(eq(tidbits.id, tidbitId));
-}
-
-function calculateDelta(prevSections: EssaySection[], newSections: EssaySection[]): EssayDelta {
-  const delta: EssayDelta = {
-    added: [],
-    removed: [],
-    modified: [],
-  };
-
-  // Create maps of content by heading
-  const prevMap = new Map(prevSections.map(s => [s.heading, s.content]));
-  const newMap = new Map(newSections.map(s => [s.heading, s.content]));
-
-  // Find added and removed sections
-  for (const [heading, content] of newMap.entries()) {
-    if (!prevMap.has(heading)) {
-      delta.added.push(content);
-    }
-  }
-
-  for (const [heading, content] of prevMap.entries()) {
-    if (!newMap.has(heading)) {
-      delta.removed.push(content);
-    }
-  }
-
-  // Find modified sections
-  for (const [heading, newContent] of newMap.entries()) {
-    const prevContent = prevMap.get(heading);
-    if (prevContent && prevContent !== newContent) {
-      delta.modified.push({
-        before: prevContent,
-        after: newContent,
-      });
-    }
-  }
-
-  return delta;
 }
 
 export async function associateTidbitsWithEssay(essayId: string, tidbitIds: string[]) {

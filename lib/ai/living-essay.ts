@@ -90,7 +90,10 @@ export async function generateFromCallSummary(callSummary: CallSummary): Promise
   let content: GeneratedContent;
   try {
     content = JSON.parse(data.choices[0].message.content);
-  } catch (e) {
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to parse JSON response from Groq: ${error.message}`);
+    }
     throw new Error('Failed to parse JSON response from Groq');
   }
 
