@@ -41,6 +41,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +59,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         console.log('Call started, time since last event:', now - lastEventTime, 'ms');
         lastEventTime = now;
         setIsActive(true);
+        setIsConnecting(false);
         setIsListening(true);
         setCurrentTranscript('');
         messageQueue = []; // Reset queue on new call
@@ -69,6 +71,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         lastEventTime = now;
         console.log('Final message queue:', messageQueue);
         setIsActive(false);
+        setIsConnecting(false);
         setIsListening(false);
         setIsSpeaking(false);
         setCurrentTranscript('');
@@ -149,6 +152,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         const now = Date.now();
         console.error('Vapi error:', error, 'time since last event:', now - lastEventTime, 'ms');
         lastEventTime = now;
+        setIsConnecting(false);
         setError('An error occurred with the voice chat. Please try again.');
       });
 
@@ -180,6 +184,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
     }
 
     setError(null);
+    setIsConnecting(true);
     
     if (vapi) {
       const assistantOverrides = {
@@ -226,8 +231,12 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
           {!isActive ? (
             // Initial single circle state
             <div 
-              onClick={handleStartCall}
-              className="w-20 h-20 bg-brand-tertiary rounded-full cursor-pointer transition-all duration-500 hover:scale-110 flex items-center justify-center group"
+              onClick={isConnecting ? undefined : handleStartCall}
+              className={`w-20 h-20 bg-brand-tertiary rounded-full transition-all duration-500 flex items-center justify-center group ${
+                isConnecting 
+                  ? 'animate-pulse' 
+                  : 'cursor-pointer hover:scale-110'
+              }`}
             >
               <div className="w-16 h-16 bg-brand-secondary rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
             </div>
