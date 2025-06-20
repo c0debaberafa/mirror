@@ -32,6 +32,7 @@ export async function generateFromCallSummary(callSummary: CallSummary): Promise
     content: `The following is a transcript of a user speaking freely to Fred, reflecting on their inner life, dilemmas, observations, and aspirations. Your job is to transform this into a “Living Essay” — a lightly structured, evolving reflection that captures the **core tensions**, **emerging insights**, and **unspoken threads** running through their thoughts. This is not an academic essay or a bullet-point summary. It's an open-ended artifact of thought-in-progress — raw but readable, organized but not over-edited.
 
     Instructions:
+      - Use second person POV (you, your, etc.).
       - Preserve the user's **original tone and voice** — keep it human, slightly informal, and reflective.
       - Organize the essay around the **central tensions or recurring themes** that show up across the transcript.
       - Use smooth transitions and connective language to reflect how the user's thoughts evolved over time.

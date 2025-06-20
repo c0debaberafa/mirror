@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from "@/hooks/use-toast"
+import { ToastAction } from "@/components/ui/toast"
 
 import Vapi from '@vapi-ai/web';
 
@@ -33,6 +35,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
   userId,
   clerkUserId
 }) => {
+  const { toast } = useToast();
   const [vapi, setVapi] = useState<Vapi | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -75,6 +78,26 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         setIsListening(false);
         setIsSpeaking(false);
         setCurrentTranscript('');
+
+        const { id: toastId, update, dismiss } = toast({
+          title: "Updating your Living Essay...",
+          description: "This will take a few moments.",
+        });
+
+        // TODO: Replace with actual webhook event handling
+        setTimeout(() => {
+          update({
+            id: toastId,
+            title: "Your Living Essay is ready to view.",
+            description: "Click here to view it.", // Making it more actionable
+            action: <ToastAction altText="View Essay">View</ToastAction>,
+          });
+
+          // Automatically dismiss after a few seconds
+          setTimeout(() => {
+            dismiss();
+          }, 5000);
+        }, 5000); // Simulate a 5-second processing time
       });
 
       vapiInstance.on('speech-start', () => {
