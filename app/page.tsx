@@ -102,8 +102,8 @@ export default function Home() {
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Header - Simplified */}
         <div className="text-center mb-8">
-          <h1 className="font-tenor text-4xl text-brand-primary mb-3 font-bold">Fred</h1>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-brand-secondary to-brand-highlight mx-auto mt-4"></div>
+          {/* <h1 className="font-tenor text-4xl text-brand-primary mb-3 font-bold">Fred</h1>
+          <div className="w-24 h-0.5 bg-gradient-to-r from-brand-secondary to-brand-highlight mx-auto mt-4"></div> */}
         </div>
 
         {/* Main Content */}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Image from "next/image";
 import {
   ClerkProvider,
   SignInButton,
@@ -32,7 +33,7 @@ export default function RootLayout({
         <body className={`${inter.variable} antialiased`}>
           <header className="p-4 border-b">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <h1 className="text-xl font-bold">Fred</h1>
+              <Image src="/assets/images/logo.png" alt="Fred Logo" width={200} height={80} />
               <div className="flex items-center gap-4">
                 <SignedOut>
                   <SignInButton />
