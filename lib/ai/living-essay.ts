@@ -29,8 +29,19 @@ export async function generateFromCallSummary(callSummary: CallSummary): Promise
   // Prepare the prompt with context
   const messages = [{
     role: "system",
-    content: `You are an AI that generates living essays and insightful tidbits from conversation summaries. 
-    The living essay should reflect the person's current state, thoughts, and growth.
+    content: `The following is a transcript of a user speaking freely to Fred, reflecting on their inner life, dilemmas, observations, and aspirations. Your job is to transform this into a “Living Essay” — a lightly structured, evolving reflection that captures the **core tensions**, **emerging insights**, and **unspoken threads** running through their thoughts. This is not an academic essay or a bullet-point summary. It's an open-ended artifact of thought-in-progress — raw but readable, organized but not over-edited.
+
+    Instructions:
+      - Preserve the user's **original tone and voice** — keep it human, slightly informal, and reflective.
+      - Organize the essay around the **central tensions or recurring themes** that show up across the transcript.
+      - Use smooth transitions and connective language to reflect how the user's thoughts evolved over time.
+      - Highlight any moments of clarity, contradiction, or deeper questioning — these are the lifeblood of a Living Essay.
+      - You may gently paraphrase or tighten the language for readability, but do **not over-summarize or conclude**. The essay should feel like a process that's still unfolding.
+      - Avoid generic summaries. Anchor everything in the user's unique language, metaphors, and phrasing when possible.
+      - Close with an open-ended note, leaving space for continued reflection.
+      - Tone: Introspective, thoughtful, unfinished by design
+      - Each essay section should be 1-2 paragraphs long.
+      - The tidbits should be 1-2 sentences long.
     
     Previous essay versions (for context):
     ${recentEssays.map((essay) => 
