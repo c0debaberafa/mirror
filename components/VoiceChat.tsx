@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
+import { useCachedVoiceChatData } from '@/hooks/use-cached-data';
 
 import Vapi from '@vapi-ai/web';
 
@@ -27,13 +28,15 @@ interface VoiceChatProps {
   assistantId?: string;
   userId?: string;
   clerkUserId?: string;
+  onCallEnded?: () => void;
 }
 
 const VoiceChat: React.FC<VoiceChatProps> = ({ 
   vapiApiKey,
   assistantId,
   userId,
-  clerkUserId
+  clerkUserId,
+  onCallEnded
 }) => {
   const { toast } = useToast();
   const [vapi, setVapi] = useState<Vapi | null>(null);
@@ -46,38 +49,14 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
   const [isActive, setIsActive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userData, setUserData] = useState<{
-    firstName: string | null;
-    lastName: string | null;
-    onboardingArchetypes: string;
-    callSummaries: any[];
-  } | null>(null);
-  const [isLoadingUserData, setIsLoadingUserData] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch user data when component mounts
-  useEffect(() => {
-    if (clerkUserId) {
-      setIsLoadingUserData(true);
-      fetch(`/api/users/${clerkUserId}/voice-chat-data`)
-        .then(response => response.json())
-        .then((data: { firstName: string | null; lastName: string | null; onboardingArchetypes: string; callSummaries: any[] }) => {
-          setUserData(data);
-        })
-        .catch((err: Error) => {
-          console.error('Error fetching user data:', err);
-          setUserData({
-            firstName: null,
-            lastName: null,
-            onboardingArchetypes: 'No onboarding data available.',
-            callSummaries: []
-          });
-        })
-        .finally(() => {
-          setIsLoadingUserData(false);
-        });
-    }
-  }, [clerkUserId]);
+  // Use cached data hook for user data
+  const { 
+    data: userData, 
+    isLoading: isLoadingUserData, 
+    error: userDataError 
+  } = useCachedVoiceChatData(clerkUserId);
 
   useEffect(() => {
     if (vapiApiKey) {
@@ -129,6 +108,10 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
             dismiss();
           }, 5000);
         }, 5000); // Simulate a 5-second processing time
+
+        if (onCallEnded) {
+          onCallEnded();
+        }
       });
 
       vapiInstance.on('speech-start', () => {
@@ -242,8 +225,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
     
     if (vapi) {
       // Format call summaries for the assistant - only use summary field
-      const callSummariesText = userData?.callSummaries.length 
-        ? userData.callSummaries.map((summary, index) => 
+      const callSummariesText = userData?.callSummaries?.length 
+        ? userData.callSummaries.map((summary: any, index: number) => 
             `Call ${index + 1} (${new Date(summary.createdAt).toLocaleDateString()}):\n${summary.summary || 'No summary available'}`
           ).join('\n\n')
         : 'No previous call summaries available.';

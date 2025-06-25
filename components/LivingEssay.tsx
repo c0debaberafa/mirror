@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Check, X, History, MessageCircle, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCachedLivingEssay } from '@/hooks/use-cached-data';
 
 interface EssaySection {
   heading: string;
@@ -33,6 +34,22 @@ interface Tidbit {
   type: string;
   content: string;
   description: string;
+}
+
+// Helper function to get tidbit type emoji
+const getTidbitTypeEmoji = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    Mood: '😌',
+    Focus: '🎯',
+    Value: '💎',
+    Tension: '⚡',
+    Joy: '✨',
+    Future: '🔮',
+    Echo: '🔄',
+    Shift: '🔄',
+  }
+  
+  return typeMap[type] || '💭'
 }
 
 // Skeleton Loading Components
@@ -113,44 +130,24 @@ const EmptyState: React.FC = () => (
 );
 
 const LivingEssay: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingSection, setEditingSection] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState('');
-  const [essays, setEssays] = useState<LivingEssayData[]>([]);
-  const [currentEssay, setCurrentEssay] = useState<LivingEssayData | null>(null);
-  const [relevantTidbits, setRelevantTidbits] = useState<Tidbit[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Preload data on component mount
-  useEffect(() => {
-    fetchEssayData();
-  }, []);
+  // Use cached data hook
+  const { 
+    data: essayData, 
+    isLoading, 
+    error: fetchError, 
+    refresh: refreshEssay,
+    isStale 
+  } = useCachedLivingEssay();
 
-  const fetchEssayData = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/living-essay');
-      if (!response.ok) {
-        throw new Error('Failed to fetch essay data');
-      }
-      
-      const data = await response.json();
-      setEssays(data.essays || []);
-      setCurrentEssay(data.essays?.[0] || null);
-      setRelevantTidbits(data.tidbits || []);
-    } catch (error) {
-      console.error('Error fetching essay data:', error);
-      setError('Failed to load your living essay. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const essays = essayData?.essays || [];
+  const currentEssay = essays[0] || null;
+  const relevantTidbits = essayData?.tidbits || [];
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
     try {
       const response = await fetch('/api/living-essay', {
         method: 'POST',
@@ -167,14 +164,11 @@ const LivingEssay: React.FC = () => {
       }
       
       const newEssay = await response.json();
-      setEssays([newEssay, ...essays]);
-      setCurrentEssay(newEssay);
-      await fetchEssayData(); // Refresh tidbits as well
+      // Refresh the cached data
+      await refreshEssay();
     } catch (error) {
       console.error('Error refreshing essay:', error);
       setError('Failed to refresh your essay. Please try again.');
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -207,9 +201,8 @@ const LivingEssay: React.FC = () => {
         throw new Error('Failed to save essay');
       }
       
-      const newEssay = await response.json();
-      setEssays([newEssay, ...essays]);
-      setCurrentEssay(newEssay);
+      // Refresh the cached data
+      await refreshEssay();
     } catch (error) {
       console.error('Error saving essay:', error);
       setError('Failed to save your changes. Please try again.');
@@ -223,7 +216,9 @@ const LivingEssay: React.FC = () => {
   };
 
   const handleVersionSelect = (essay: LivingEssayData) => {
-    setCurrentEssay(essay);
+    // This would need to be handled differently with caching
+    // For now, we'll just refresh the data
+    refreshEssay();
   };
 
   const highlightDelta = (content: string): React.ReactElement => {
@@ -249,7 +244,7 @@ const LivingEssay: React.FC = () => {
     });
 
     return <div dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
-  };
+  }
 
   // Show skeleton while loading
   if (isLoading) {
@@ -262,6 +257,29 @@ const LivingEssay: React.FC = () => {
         </div>
         <div className="relative z-10 max-w-4xl mx-auto">
           <EssaySkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if fetch failed
+  if (fetchError) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto">
+          <div className="mb-6">
+            <MessageCircle className="w-12 h-12 text-red-500" />
+          </div>
+          <h2 className="font-tenor text-2xl text-brand-primary mb-3">Error Loading Essay</h2>
+          <p className="text-brand-tertiary mb-6 leading-relaxed">
+            {fetchError}
+          </p>
+          <Button 
+            className="bg-brand-secondary hover:bg-brand-secondary/90 text-white"
+            onClick={() => refreshEssay()}
+          >
+            Try Again
+          </Button>
         </div>
       </div>
     );
@@ -313,14 +331,17 @@ const LivingEssay: React.FC = () => {
           <h1 className="font-tenor text-3xl text-brand-primary mb-3">Your Living Essay</h1>
           <div className="flex items-center justify-center space-x-4 text-brand-tertiary text-sm">
             <span>Last updated: {new Date(currentEssay.createdAt).toLocaleDateString()}</span>
+            {isStale && (
+              <span className="text-orange-600 text-xs">(Data may be outdated)</span>
+            )}
             <Button
               onClick={handleRefresh}
-              disabled={isRefreshing}
+              disabled={isLoading}
               variant="ghost"
               size="sm"
               className="text-brand-secondary hover:text-brand-primary"
             >
-              {isRefreshing ? (
+              {isLoading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
                   Updating...
@@ -351,7 +372,7 @@ const LivingEssay: React.FC = () => {
                       <Button
                         onClick={() => handleSave(index)}
                         size="sm"
-                        className="bg-brand-secondary hover:bg-brand-secondary/90"
+                        className="bg-brand-secondary hover:bg-brand-secondary/90 text-white"
                       >
                         <Check className="w-4 h-4 mr-1" />
                         Save
@@ -390,10 +411,13 @@ const LivingEssay: React.FC = () => {
         {/* Relevant Tidbits */}
         {relevantTidbits.length > 0 && (
           <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {relevantTidbits.map((tidbit) => (
+            {relevantTidbits.map((tidbit: Tidbit) => (
               <Card key={tidbit.id} className="bg-gradient-to-br from-brand-secondary/10 to-brand-highlight/10 border-brand-tertiary p-6">
                 <div className="flex items-center justify-between select-none">
-                  <h3 className="font-tenor text-lg text-brand-primary mb-0">{tidbit.type}</h3>
+                  <h3 className="font-tenor text-lg text-brand-primary mb-0 flex items-center gap-2">
+                    <span className="text-xl">{getTidbitTypeEmoji(tidbit.type)}</span>
+                    {tidbit.type}
+                  </h3>
                 </div>
                 <div className="mt-2">
                   <div className="font-inter text-brand-primary/90 text-base leading-relaxed mb-1">{tidbit.content}</div>
@@ -409,7 +433,7 @@ const LivingEssay: React.FC = () => {
           <Card className="bg-white/60 backdrop-blur-sm border-brand-tertiary p-6">
             <h3 className="font-tenor text-lg text-brand-primary mb-4">Essay Evolution</h3>
             <div className="space-y-3">
-              {essays.slice(0, 5).map((essay, index) => (
+              {essays.slice(0, 5).map((essay: LivingEssayData, index: number) => (
                 <button
                   key={essay.id}
                   onClick={() => handleVersionSelect(essay)}
@@ -430,15 +454,10 @@ const LivingEssay: React.FC = () => {
                        index === 1 ? "Previous Version" :
                        `Version ${essays.length - index}`}
                     </span>
-                    <span className="text-brand-tertiary text-xs ml-2">
+                    <span className="block text-xs text-brand-tertiary">
                       {new Date(essay.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  {currentEssay.id === essay.id && (
-                    <div className="ml-auto">
-                      <History className="w-4 h-4 text-brand-secondary" />
-                    </div>
-                  )}
                 </button>
               ))}
             </div>

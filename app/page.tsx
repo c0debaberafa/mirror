@@ -6,6 +6,8 @@ import VoiceChat from '@/components/VoiceChat';
 import LivingEssay from '../components/LivingEssay';
 import { useUser } from '@clerk/nextjs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCachedUserData, useCachedTidbits } from '@/hooks/use-cached-data';
+import { CacheInvalidator } from '@/components/CacheInvalidator';
 
 interface Message {
   id: string;
@@ -26,6 +28,15 @@ interface User {
   lastSignInAt?: string;
   isActive: boolean;
   metadata?: Record<string, unknown>;
+}
+
+interface Tidbit {
+  id: string;
+  type: string;
+  content: string;
+  createdAt: string;
+  lastUsedAt: string;
+  relevanceScore: number;
 }
 
 // Helper function to display archetype names
@@ -51,12 +62,28 @@ const getArchetypeDisplay = (archetype: string): string => {
   return archetypeMap[archetype] || archetype
 }
 
+// Helper function to get tidbit type emoji
+const getTidbitTypeEmoji = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    Mood: '😌',
+    Focus: '🎯',
+    Value: '💎',
+    Tension: '⚡',
+    Joy: '✨',
+    Future: '🔮',
+    Echo: '🔄',
+    Shift: '🔄',
+  }
+  
+  return typeMap[type] || '💭'
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('voice-chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [dbUser, setDbUser] = useState<User | null>(null);
+  const [shouldInvalidateCache, setShouldInvalidateCache] = useState(false);
   const { user } = useUser();
 
   // VAPI configuration
@@ -66,28 +93,9 @@ export default function Home() {
   // Get the full Clerk user ID
   const clerkUserId = user?.id;
   
-  // Fetch user data from database
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!clerkUserId) {
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/users/${clerkUserId}`);
-        if (response.ok) {
-          const userData = await response.json();
-          setDbUser(userData);
-        } else {
-          console.error('Failed to fetch user data:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    fetchUser();
-  }, [clerkUserId]);
+  // Use cached data hooks
+  const { data: dbUser, isLoading: isLoadingUser } = useCachedUserData(clerkUserId);
+  const { data: tidbits, isLoading: isLoadingTidbits } = useCachedTidbits(clerkUserId);
 
   // Use the database userId if available, otherwise fall back to clerkUserId
   const userId = dbUser?.id || clerkUserId;
@@ -114,8 +122,22 @@ export default function Home() {
     }
   }, [isInitialized]);
 
+  // Handle cache invalidation after call ends
+  const handleCallEnded = () => {
+    setShouldInvalidateCache(true);
+    // Reset the trigger after a short delay
+    setTimeout(() => setShouldInvalidateCache(false), 100);
+  };
+
   return (
     <div className="min-h-screen bg-brand-background relative">
+      {/* Cache Invalidator - handles cache invalidation when new data is available */}
+      <CacheInvalidator 
+        clerkUserId={clerkUserId}
+        trigger={shouldInvalidateCache}
+        onInvalidated={() => console.log('Caches invalidated successfully')}
+      />
+
       {/* Background ellipses */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="flowing-ellipse absolute -top-20 -left-20 w-64 h-32 opacity-10"></div>
@@ -124,7 +146,7 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Welcome Message with Onboarding Data */}
+        {/* Welcome Message with Tidbits */}
         {user?.publicMetadata && user.publicMetadata.onboardingComplete === true && (
           <Card className="mb-8 max-w-2xl mx-auto">
             <CardHeader>
@@ -132,22 +154,42 @@ export default function Home() {
                 Welcome back, {user.firstName || 'there'}! 👋
               </CardTitle>
               <CardDescription className="text-center">
-                Ready to continue your journey with Mirror AI?
+                Revisit these insights from your past conversations
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {(user.publicMetadata.dream_home_archetype as string) && (
-                  <div className="text-gray-600">
-                    <span className="font-medium">Dream:</span> {getArchetypeDisplay(user.publicMetadata.dream_home_archetype as string)}
-                  </div>
-                )}
-                {(user.publicMetadata.spirit_animal_archetype as string) && (
-                  <div className="text-gray-600">
-                    <span className="font-medium">Spirit:</span> {getArchetypeDisplay(user.publicMetadata.spirit_animal_archetype as string)}
-                  </div>
-                )}
-              </div>
+              {isLoadingTidbits ? (
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="text-left p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-highlight/10 rounded-lg border border-brand-tertiary/20 animate-pulse">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                        <div className="h-4 bg-gray-200 rounded w-16"></div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-gray-200 rounded w-full"></div>
+                        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : tidbits && tidbits.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  {tidbits.map((tidbit: Tidbit) => (
+                    <div key={tidbit.id} className="text-left p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-highlight/10 rounded-lg border border-brand-tertiary/20">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">{getTidbitTypeEmoji(tidbit.type)}</span>
+                        <span className="font-medium text-brand-primary">{tidbit.type}</span>
+                      </div>
+                      <div className="text-gray-700 leading-relaxed">{tidbit.content}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500 italic">
+                  No insights yet. Start a conversation to generate your first tidbits!
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -189,6 +231,7 @@ export default function Home() {
               assistantId={assistantId}
               userId={userId}
               clerkUserId={clerkUserId}
+              onCallEnded={handleCallEnded}
             />
           </TabsContent>
 
