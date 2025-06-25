@@ -33,7 +33,7 @@ const questions: Question[] = [
       { id: 'seaside', emoji: '🌊', title: 'Seaside villa', description: 'Slow days, long mornings' },
       { id: 'family', emoji: '🏡', title: 'Family home', description: 'Warmth, mess, meaning' },
       { id: 'nomadic', emoji: '🌍', title: 'Nomadic life', description: 'New cities, new energy' },
-      { id: 'nature', emoji: '🧘', title: 'Nature retreat', description: 'Light bags, clear mind' },
+      { id: 'nature', emoji: '🌳', title: 'Nature retreat', description: 'Green sights, clear mind' },
       { id: 'system', emoji: '❓', title: 'No home, just a system', description: 'Still figuring it out' }
     ]
   },
@@ -44,7 +44,7 @@ const questions: Question[] = [
     fieldName: 'calendar_style',
     options: [
       { id: 'back_to_back', emoji: '🎯', title: 'Back-to-back', description: 'Speed is clarity' },
-      { id: 'fully_blocked', emoji: '⛓', title: 'Fully blocked', description: 'Focus is protection' },
+      { id: 'fully_blocked', emoji: '⛓️', title: 'Fully blocked', description: 'Focus is protection' },
       { id: 'rhythmic', emoji: '🔁', title: 'Rhythmic', description: 'Rituals, then flow' },
       { id: 'wide_open', emoji: '🧘', title: 'Wide open', description: 'I move with energy' },
       { id: 'light_reactive', emoji: '📬', title: 'Light and reactive', description: 'Keep it loose' },
@@ -57,10 +57,10 @@ const questions: Question[] = [
     subtitle: 'How you move through the world when it\'s all clicking.',
     fieldName: 'spirit_animal_archetype',
     options: [
-      { id: 'fox', emoji: '🦊', title: 'Fox', description: 'Sharp, strategic, always watching' },
-      { id: 'horse', emoji: '🐎', title: 'Horse', description: 'Fast, intense, hard to stop' },
+      { id: 'fox', emoji: '🦊', title: 'Fox', description: 'Sharp, strategic, always ahead' },
+      { id: 'horse', emoji: '🐎', title: 'Horse', description: 'Fast, intense, won\'t slow down' },
       { id: 'whale', emoji: '🐋', title: 'Whale', description: 'Calm, deep, shifts the tide' },
-      { id: 'parrot', emoji: '🦜', title: 'Parrot', description: 'Bold, bright, heard by all' },
+      { id: 'parrot', emoji: '🦜', title: 'Parrot', description: 'Charming, bright, cuts through noise' },
       { id: 'dragon', emoji: '🐉', title: 'Dragon', description: 'Fierce, visionary, commands space' },
       { id: 'becoming', emoji: '❓', title: 'Still becoming', description: 'Discovering my power' }
     ]
@@ -75,7 +75,7 @@ const questions: Question[] = [
       { id: 'cracking', emoji: '🧠', title: 'Cracking a stuck problem', description: 'Breakthrough clarity' },
       { id: 'pitching', emoji: '🎤', title: 'Pitching and feeling the room shift', description: 'Moving hearts and minds' },
       { id: 'hearing', emoji: '👁', title: 'Hearing "this changed how I think"', description: 'Impact that lasts' },
-      { id: 'flow', emoji: '⚡', title: 'Hitting flow on the edge of chaos', description: 'Peak performance' },
+      { id: 'flow', emoji: '⚡️', title: 'Hitting flow on the edge of chaos', description: 'Peak performance' },
       { id: 'finding', emoji: '❓', title: 'Haven\'t found it yet', description: 'Still discovering' }
     ]
   }
@@ -125,7 +125,7 @@ export default function OnboardingPage() {
         await user?.reload()
         toast({
           title: "Onboarding Complete!",
-          description: "Welcome to Mirror AI. You're all set up!",
+          description: "You're all set up to have your first conversation wtih Fred.",
         })
         router.push('/')
       }
@@ -176,7 +176,7 @@ export default function OnboardingPage() {
           <CardHeader className="text-center pb-6">
             <div className="mb-4">
               <h1 className="text-3xl font-bold text-brand-primary mb-2">
-                Welcome to Mirror AI
+                Welcome to Fred AI
               </h1>
               <div className="w-16 h-0.5 bg-gradient-to-r from-brand-secondary to-brand-highlight mx-auto mb-4"></div>
               
@@ -259,7 +259,7 @@ export default function OnboardingPage() {
                     <span>Setting up...</span>
                   </div>
                 ) : isLastStep ? (
-                  'Complete Setup'
+                  'Finish'
                 ) : (
                   'Next'
                 )}

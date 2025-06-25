@@ -51,8 +51,8 @@ async function OnboardingHeader() {
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   
-  // Hide header for onboarding route
-  if (pathname.startsWith("/onboarding")) {
+  // Only hide header for onboarding route
+  if (pathname === "/onboarding") {
     return null;
   }
 
