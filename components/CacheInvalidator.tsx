@@ -12,7 +12,7 @@ export function CacheInvalidator({
   trigger = false, 
   onInvalidated 
 }: CacheInvalidatorProps) {
-  const { invalidateCache, invalidateRelatedCaches } = useCacheManager();
+  const { invalidateCache } = useCacheManager();
 
   useEffect(() => {
     if (trigger && clerkUserId) {
@@ -21,12 +21,9 @@ export function CacheInvalidator({
       invalidateCache(CACHE_KEYS.TIDBITS(clerkUserId));
       invalidateCache(CACHE_KEYS.VOICE_CHAT_DATA(clerkUserId));
       
-      // Also invalidate any other caches that might be related
-      invalidateRelatedCaches(clerkUserId);
-      
       onInvalidated?.();
     }
-  }, [trigger, clerkUserId, invalidateCache, invalidateRelatedCaches, onInvalidated]);
+  }, [trigger, clerkUserId, invalidateCache, onInvalidated]);
 
   // This component doesn't render anything
   return null;
@@ -34,7 +31,7 @@ export function CacheInvalidator({
 
 // Hook for easy cache invalidation
 export function useCacheInvalidation(clerkUserId?: string) {
-  const { invalidateCache, invalidateRelatedCaches } = useCacheManager();
+  const { invalidateCache } = useCacheManager();
 
   const invalidateAllUserCaches = () => {
     if (!clerkUserId) return;

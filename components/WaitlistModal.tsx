@@ -56,7 +56,7 @@ export default function WaitlistModal({ isOpen, onClose, remainingSlots, clerkUs
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to join waitlist. Please try again.",
@@ -75,9 +75,9 @@ export default function WaitlistModal({ isOpen, onClose, remainingSlots, clerkUs
         <CardHeader>
           <CardTitle className="text-center">Join the Waitlist</CardTitle>
           <CardDescription className="text-center">
-            Fred AI is currently in limited release.   Only {remainingSlots} slots remaining!<br />
+            Fred AI is currently in limited release. Only {remainingSlots} slots remaining!<br />
 
-            <span className="text-xs text-gray-500">After July 2, we're inviting 50 founders to grow with Fred as we supercharge his capabilities.</span>
+            <span className="text-xs text-gray-500">After July 2, we&apos;re inviting 50 founders to grow with Fred as we supercharge his capabilities.</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -92,7 +92,7 @@ export default function WaitlistModal({ isOpen, onClose, remainingSlots, clerkUs
                 required
                 rows={4}
                 value={response}
-                onChange={(e) => setResponse(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setResponse(e.target.value)}
               />
             </div>
             <div className="flex gap-2 pt-2">

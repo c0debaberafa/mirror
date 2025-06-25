@@ -54,8 +54,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
   // Use cached data hook for user data
   const { 
     data: userData, 
-    isLoading: isLoadingUserData, 
-    error: userDataError 
+    isLoading: isLoadingUserData
   } = useCachedVoiceChatData(clerkUserId);
 
   useEffect(() => {
@@ -226,7 +225,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
     if (vapi) {
       // Format call summaries for the assistant - only use summary field
       const callSummariesText = userData?.callSummaries?.length 
-        ? userData.callSummaries.map((summary: any, index: number) => 
+        ? userData.callSummaries.map((summary: { createdAt: string; summary?: string }, index: number) => 
             `Call ${index + 1} (${new Date(summary.createdAt).toLocaleDateString()}):\n${summary.summary || 'No summary available'}`
           ).join('\n\n')
         : 'No previous call summaries available.';

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCallSummary, getCallSummaryByCallId } from '@/lib/db/client';
 import { generateFromCallSummary } from '@/lib/ai/living-essay';
-import { createLivingEssay } from '@/lib/db/living-essay';
 
 // Types for Vapi webhook data
 interface VapiCall {

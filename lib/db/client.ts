@@ -93,13 +93,13 @@ export async function getRecentCallSummaries(clerkUserId: string, limit: number 
 }
 
 // Format onboarding archetypes from user metadata
-export function formatOnboardingArchetypes(metadata: any): string {
+export function formatOnboardingArchetypes(metadata: Record<string, unknown> | null): string {
   if (!metadata || typeof metadata !== 'object') {
     return 'No onboarding data available.';
   }
 
   // Handle nested public_metadata structure from Clerk
-  const onboardingData = metadata.public_metadata || metadata;
+  const onboardingData = (metadata.public_metadata || metadata) as Record<string, unknown>;
   
   if (!onboardingData || typeof onboardingData !== 'object') {
     return 'No onboarding data available.';
@@ -118,7 +118,7 @@ export function formatOnboardingArchetypes(metadata: any): string {
       'no_home_system': 'Systems thinker who sees life as recursive loops, not destinations and prefers abstraction, pattern language'
     };
     
-    const originalTerm = onboardingData.dream_home_archetype;
+    const originalTerm = onboardingData.dream_home_archetype as string;
     const description = dreamHomeMap[originalTerm] || originalTerm;
     archetypes.push(`🔹 Dream Home: "${originalTerm}" - ${description}`);
   }
@@ -134,7 +134,7 @@ export function formatOnboardingArchetypes(metadata: any): string {
       'still_figuring_out': 'Wandering mode who wants to feel seen without pressure and needs gentle direction, not rigid systems'
     };
     
-    const originalTerm = onboardingData.calendar_style;
+    const originalTerm = onboardingData.calendar_style as string;
     const description = calendarMap[originalTerm] || originalTerm;
     archetypes.push(`🔹 Calendar Style: "${originalTerm}" - ${description}`);
   }
@@ -150,7 +150,7 @@ export function formatOnboardingArchetypes(metadata: any): string {
       'still_becoming': 'Undefined/Searching person who needs space for ambiguity and responds well to gentle questions, emergence'
     };
     
-    const originalTerm = onboardingData.spirit_animal_archetype;
+    const originalTerm = onboardingData.spirit_animal_archetype as string;
     const description = spiritAnimalMap[originalTerm] || originalTerm;
     archetypes.push(`🔹 Spirit Animal: "${originalTerm}" - ${description}`);
   }
@@ -166,7 +166,7 @@ export function formatOnboardingArchetypes(metadata: any): string {
       'haven_t_found_it': 'Explorer who is still mapping what matters and needs reflective, identity-oriented prompts'
     };
     
-    const originalTerm = onboardingData.peak_moment_trigger;
+    const originalTerm = onboardingData.peak_moment_trigger as string;
     const description = peakMomentMap[originalTerm] || originalTerm;
     archetypes.push(`🔹 Peak Moment: "${originalTerm}" - ${description}`);
   }
@@ -190,7 +190,7 @@ export async function getUserDataForVoiceChat(clerkUserId: string) {
     };
   }
 
-  const onboardingArchetypes = formatOnboardingArchetypes(user.metadata);
+  const onboardingArchetypes = formatOnboardingArchetypes(user.metadata as Record<string, unknown>);
   const callSummaries = await getRecentCallSummaries(clerkUserId, 3);
 
   return {

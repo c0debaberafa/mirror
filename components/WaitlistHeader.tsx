@@ -9,7 +9,6 @@ import { useUser } from '@clerk/nextjs';
 export default function WaitlistHeader() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [remainingSlots, setRemainingSlots] = useState(50);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useUser();
 
   useEffect(() => {
@@ -25,14 +24,7 @@ export default function WaitlistHeader() {
       }
     } catch (error) {
       console.error('Failed to fetch waitlist stats:', error);
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const handleWaitlistSuccess = () => {
-    // Refresh the stats after successful submission
-    fetchWaitlistStats();
   };
 
   return (

@@ -25,7 +25,7 @@ export default function LandingPage() {
 
         {/* Description */}
         <p className="text-xl text-gray-700 leading-relaxed mb-8">
-        Busy minds need quiet moments. Fred makes space for reflection so you can make better decisions, faster.
+        Busy minds need quiet moments. Fred makes space for reflection so you can be the best founder you can be.
         </p>
 
         {/* CTA Button */}
@@ -33,7 +33,7 @@ export default function LandingPage() {
           href="/home"
           className="inline-block bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
         >
-          Start Your Journey
+          Talk to Fred
         </Link>
 
         {/* Subtitle */}

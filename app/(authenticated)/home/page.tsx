@@ -16,20 +16,6 @@ interface Message {
   timestamp: string;
 }
 
-interface User {
-  id: string;
-  clerkUserId: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-  lastSignInAt?: string;
-  isActive: boolean;
-  metadata?: Record<string, unknown>;
-}
-
 interface Tidbit {
   id: string;
   type: string;
@@ -37,29 +23,6 @@ interface Tidbit {
   createdAt: string;
   lastUsedAt: string;
   relevanceScore: number;
-}
-
-// Helper function to display archetype names
-const getArchetypeDisplay = (archetype: string): string => {
-  const archetypeMap: Record<string, string> = {
-    // Dream home archetypes
-    manhattan: '🌃 Manhattan Penthouse',
-    seaside: '🌊 Seaside Villa',
-    family: '🏡 Family Home',
-    nomadic: '🌍 Nomadic Life',
-    nature: '🧘 Nature Retreat',
-    system: '❓ System-based',
-    
-    // Spirit animal archetypes
-    fox: '🦊 Fox',
-    horse: '🐎 Horse',
-    whale: '🐋 Whale',
-    parrot: '🦜 Parrot',
-    dragon: '🐉 Dragon',
-    becoming: '❓ Becoming',
-  }
-  
-  return archetypeMap[archetype] || archetype
 }
 
 // Helper function to get tidbit type emoji
@@ -94,7 +57,7 @@ export default function Home() {
   const clerkUserId = user?.id;
   
   // Use cached data hooks
-  const { data: dbUser, isLoading: isLoadingUser } = useCachedUserData(clerkUserId);
+  const { data: dbUser } = useCachedUserData(clerkUserId);
   const { data: tidbits, isLoading: isLoadingTidbits } = useCachedTidbits(clerkUserId);
 
   // Use the database userId if available, otherwise fall back to clerkUserId

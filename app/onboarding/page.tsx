@@ -137,7 +137,7 @@ export default function OnboardingPage() {
           variant: "destructive",
         })
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
       toast({
         title: "Error",

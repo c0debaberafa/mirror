@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Pencil, Check, X, History, MessageCircle, RefreshCw } from 'lucide-react';
+import { Pencil, Check, X, MessageCircle, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLivingEssay } from '@/hooks/use-cached-data';
 
@@ -157,7 +157,6 @@ const LivingEssay: React.FC = () => {
         throw new Error('Failed to refresh essay');
       }
       
-      const newEssay = await response.json();
       // Refresh the data
       await refreshEssay();
     } catch (error) {
@@ -209,7 +208,7 @@ const LivingEssay: React.FC = () => {
     setEditingSection(null);
   };
 
-  const handleVersionSelect = (essay: LivingEssayData) => {
+  const handleVersionSelect = (_essay: LivingEssayData) => {
     // Refresh the data to get the latest version
     refreshEssay();
   };
