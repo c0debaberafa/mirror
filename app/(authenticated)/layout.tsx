@@ -1,48 +1,32 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import Image from "next/image";
 import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
   SignedIn,
   SignedOut,
   UserButton,
   RedirectToSignUp,
 } from "@clerk/nextjs";
-import { Toaster } from "@/components/ui/toaster";
-import "./globals.css";
 import { headers } from "next/headers";
 import WaitlistHeader from "@/components/WaitlistHeader";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
-export const metadata: Metadata = {
-  title: "Fred",
-  description: "Your AI Reflection",
-};
-
-export default function RootLayout({
+export default async function AuthenticatedLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={`${inter.variable} antialiased`}>
-          {children}
-          <Toaster />
-        </body>
-      </html>
-    </ClerkProvider>
+    <>
+      <SignedIn>
+        <AuthenticatedHeader />
+        {children}
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignUp />
+      </SignedOut>
+    </>
   );
 }
 
-async function OnboardingHeader() {
+async function AuthenticatedHeader() {
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   
@@ -64,4 +48,4 @@ async function OnboardingHeader() {
       </div>
     </header>
   );
-}
+} 

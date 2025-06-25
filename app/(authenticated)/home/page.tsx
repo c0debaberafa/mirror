@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VoiceChat from '@/components/VoiceChat';
-import LivingEssay from '../components/LivingEssay';
+import LivingEssay from '../../../components/LivingEssay';
 import { useUser } from '@clerk/nextjs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCachedUserData, useCachedTidbits } from '@/hooks/use-cached-data';
@@ -243,4 +243,4 @@ export default function Home() {
 
     </div>
   );
-}
+} 
