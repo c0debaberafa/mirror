@@ -12,6 +12,7 @@ import {
 } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
+import { headers } from "next/headers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,22 +33,9 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${inter.variable} antialiased`}>
-          <header className="p-4 border-b">
-            <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <Image src="/assets/images/logo.png" alt="Fred Logo" width={200} height={80} />
-              <div className="flex items-center gap-4">
-                <SignedOut>
-                  <SignInButton />
-                  <SignUpButton />
-                </SignedOut>
-                <SignedIn>
-                  <div className="scale-150">
-                    <UserButton />
-                  </div>
-                </SignedIn>
-              </div>
-            </div>
-          </header>
+          <SignedIn>
+            <OnboardingHeader />
+          </SignedIn>
           <SignedIn>{children}</SignedIn>
           <SignedOut>
             <RedirectToSignUp />
@@ -56,5 +44,28 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
+  );
+}
+
+async function OnboardingHeader() {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  
+  // Hide header for onboarding route
+  if (pathname.startsWith("/onboarding")) {
+    return null;
+  }
+
+  return (
+    <header className="p-4 border-b">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <Image src="/assets/images/logo.png" alt="Fred Logo" width={200} height={80} />
+        <div className="flex items-center gap-4">
+          <div className="scale-150">
+            <UserButton />
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }

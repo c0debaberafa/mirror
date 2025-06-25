@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VoiceChat from '@/components/VoiceChat';
 import LivingEssay from '../components/LivingEssay';
 import { useUser } from '@clerk/nextjs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Message {
   id: string;
@@ -25,6 +26,29 @@ interface User {
   lastSignInAt?: string;
   isActive: boolean;
   metadata?: Record<string, unknown>;
+}
+
+// Helper function to display archetype names
+const getArchetypeDisplay = (archetype: string): string => {
+  const archetypeMap: Record<string, string> = {
+    // Dream home archetypes
+    manhattan: '🌃 Manhattan Penthouse',
+    seaside: '🌊 Seaside Villa',
+    family: '🏡 Family Home',
+    nomadic: '🌍 Nomadic Life',
+    nature: '🧘 Nature Retreat',
+    system: '❓ System-based',
+    
+    // Spirit animal archetypes
+    fox: '🦊 Fox',
+    horse: '🐎 Horse',
+    whale: '🐋 Whale',
+    parrot: '🦜 Parrot',
+    dragon: '🐉 Dragon',
+    becoming: '❓ Becoming',
+  }
+  
+  return archetypeMap[archetype] || archetype
 }
 
 export default function Home() {
@@ -100,11 +124,33 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header - Simplified */}
-        <div className="text-center mb-8">
-          {/* <h1 className="font-tenor text-4xl text-brand-primary mb-3 font-bold">Fred</h1>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-brand-secondary to-brand-highlight mx-auto mt-4"></div> */}
-        </div>
+        {/* Welcome Message with Onboarding Data */}
+        {user?.publicMetadata && user.publicMetadata.onboardingComplete === true && (
+          <Card className="mb-8 max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-xl text-center">
+                Welcome back, {user.firstName || 'there'}! 👋
+              </CardTitle>
+              <CardDescription className="text-center">
+                Ready to continue your journey with Mirror AI?
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {(user.publicMetadata.dream_home_archetype as string) && (
+                  <div className="text-gray-600">
+                    <span className="font-medium">Dream:</span> {getArchetypeDisplay(user.publicMetadata.dream_home_archetype as string)}
+                  </div>
+                )}
+                {(user.publicMetadata.spirit_animal_archetype as string) && (
+                  <div className="text-gray-600">
+                    <span className="font-medium">Spirit:</span> {getArchetypeDisplay(user.publicMetadata.spirit_animal_archetype as string)}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Content */}
         <Tabs 
