@@ -285,13 +285,13 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
             // Initial single circle state
             <div 
               onClick={isConnecting || isLoadingUserData ? undefined : handleStartCall}
-              className={`w-20 h-20 bg-brand-tertiary rounded-full transition-all duration-500 flex items-center justify-center group ${
+              className={`w-28 h-28 bg-brand-tertiary rounded-full transition-all duration-500 flex items-center justify-center group ${
                 isConnecting || isLoadingUserData
                   ? 'animate-pulse' 
-                  : 'cursor-pointer hover:scale-110'
+                  : 'cursor-pointer hover:scale-110 animate-pulse-slow'
               }`}
             >
-              <div className="w-16 h-16 bg-brand-secondary rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+              <div className="w-20 h-20 bg-brand-secondary rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
             </div>
           ) : (
             <>
