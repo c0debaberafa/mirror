@@ -8,6 +8,7 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
+  RedirectToSignUp,
 } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
@@ -45,7 +46,10 @@ export default function RootLayout({
               </div>
             </div>
           </header>
-          {children}
+          <SignedIn>{children}</SignedIn>
+          <SignedOut>
+            <RedirectToSignUp />
+          </SignedOut>
           <Toaster />
         </body>
       </html>
