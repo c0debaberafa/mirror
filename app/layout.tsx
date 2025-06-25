@@ -41,7 +41,9 @@ export default function RootLayout({
                   <SignUpButton />
                 </SignedOut>
                 <SignedIn>
-                  <UserButton />
+                  <div className="scale-150">
+                    <UserButton />
+                  </div>
                 </SignedIn>
               </div>
             </div>
