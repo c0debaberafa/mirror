@@ -46,7 +46,38 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
   const [isActive, setIsActive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userData, setUserData] = useState<{
+    firstName: string | null;
+    lastName: string | null;
+    onboardingArchetypes: string;
+    callSummaries: any[];
+  } | null>(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch user data when component mounts
+  useEffect(() => {
+    if (clerkUserId) {
+      setIsLoadingUserData(true);
+      fetch(`/api/users/${clerkUserId}/voice-chat-data`)
+        .then(response => response.json())
+        .then((data: { firstName: string | null; lastName: string | null; onboardingArchetypes: string; callSummaries: any[] }) => {
+          setUserData(data);
+        })
+        .catch((err: Error) => {
+          console.error('Error fetching user data:', err);
+          setUserData({
+            firstName: null,
+            lastName: null,
+            onboardingArchetypes: 'No onboarding data available.',
+            callSummaries: []
+          });
+        })
+        .finally(() => {
+          setIsLoadingUserData(false);
+        });
+    }
+  }, [clerkUserId]);
 
   useEffect(() => {
     if (vapiApiKey) {
@@ -210,15 +241,31 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
     setIsConnecting(true);
     
     if (vapi) {
+      // Format call summaries for the assistant - only use summary field
+      const callSummariesText = userData?.callSummaries.length 
+        ? userData.callSummaries.map((summary, index) => 
+            `Call ${index + 1} (${new Date(summary.createdAt).toLocaleDateString()}):\n${summary.summary || 'No summary available'}`
+          ).join('\n\n')
+        : 'No previous call summaries available.';
+
       const assistantOverrides = {
         recordingEnabled: false,
         variableValues: {
           userId: userId || 'anonymous',
           clerkUserId: clerkUserId || 'anonymous',
+          user_name: userData?.firstName && userData?.lastName 
+            ? `${userData.firstName} ${userData.lastName}` 
+            : userData?.firstName || userData?.lastName || 'anonymous',
+          call_summaries: callSummariesText,
+          onboarding_archetypes: userData?.onboardingArchetypes || 'No onboarding data available.',
         },
         metadata: {
           userId: userId,
           clerkUserId: clerkUserId,
+          firstName: userData?.firstName,
+          lastName: userData?.lastName,
+          callSummaries: userData?.callSummaries || [],
+          onboardingArchetypes: userData?.onboardingArchetypes || '',
         }
       };
       
@@ -254,9 +301,9 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
           {!isActive ? (
             // Initial single circle state
             <div 
-              onClick={isConnecting ? undefined : handleStartCall}
+              onClick={isConnecting || isLoadingUserData ? undefined : handleStartCall}
               className={`w-20 h-20 bg-brand-tertiary rounded-full transition-all duration-500 flex items-center justify-center group ${
-                isConnecting 
+                isConnecting || isLoadingUserData
                   ? 'animate-pulse' 
                   : 'cursor-pointer hover:scale-110'
               }`}
@@ -291,6 +338,13 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
                 </p>
               </div>
             </>
+          )}
+
+          {/* Loading indicator for user data */}
+          {isLoadingUserData && (
+            <div className="mt-4 text-sm text-brand-primary/60">
+              Loading your conversation history...
+            </div>
           )}
         </div>
 
