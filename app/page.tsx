@@ -147,11 +147,11 @@ export default function Home() {
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Welcome Message with Tidbits */}
-        {user?.publicMetadata && user.publicMetadata.onboardingComplete === true && (
+        {clerkUserId && (
           <Card className="mb-8 max-w-2xl mx-auto">
             <CardHeader>
               <CardTitle className="text-xl text-center">
-                Welcome back, {user.firstName || 'there'}! 👋
+                Welcome back, {user?.firstName || 'there'}! 👋
               </CardTitle>
               <CardDescription className="text-center">
                 Revisit these insights from your past conversations
@@ -186,8 +186,8 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="text-gray-500 italic">
-                  No insights yet. Start a conversation to generate your first tidbits!
+                <div className="text-gray-500 italic text-xs">
+                  No insights yet. Speak with Fred to generate your first insights!
                 </div>
               )}
             </CardContent>

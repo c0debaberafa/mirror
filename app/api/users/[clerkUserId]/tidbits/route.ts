@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRelevantTidbits } from '@/lib/db/living-essay';
+import { getRecentTidbits } from '@/lib/db/living-essay';
 
 export async function GET(
   request: Request,
@@ -12,8 +12,8 @@ export async function GET(
       return new NextResponse('User ID is required', { status: 400 });
     }
 
-    // Get 2 most relevant tidbits for the user
-    const tidbits = await getRelevantTidbits(clerkUserId, 2);
+    // Get 2 most recent tidbits for the user
+    const tidbits = await getRecentTidbits(clerkUserId, 2);
 
     return NextResponse.json(tidbits);
   } catch (error) {

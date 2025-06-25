@@ -21,6 +21,7 @@ async function getUserIdByClerkId(clerkId: string): Promise<string | null> {
   const user = await db.query.users.findFirst({
     where: eq(users.clerkUserId, clerkId),
   });
+  
   return user?.id || null;
 }
 
@@ -157,16 +158,21 @@ export async function createTidbits(clerkUserId: string, newTidbits: Tidbit[]) {
   return result;
 }
 
-export async function getRelevantTidbits(clerkUserId: string, limit = 4) {
+export async function getRecentTidbits(clerkUserId: string, limit = 4) {
   const userId = await getUserIdByClerkId(clerkUserId);
-  if (!userId) return [];
+  
+  if (!userId) {
+    return [];
+  }
 
-  // Get tidbits with highest relevance scores
-  return await db.select()
+  // Get most recent tidbits
+  const result = await db.select()
     .from(tidbits)
     .where(eq(tidbits.userId, userId))
-    .orderBy(desc(tidbits.relevanceScore))
+    .orderBy(desc(tidbits.createdAt))
     .limit(limit);
+    
+  return result;
 }
 
 export async function updateTidbitRelevance(tidbitId: string, relevanceScore: number) {

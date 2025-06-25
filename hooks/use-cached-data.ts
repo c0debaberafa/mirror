@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useCacheManager } from './use-cache-manager';
 
 interface CachedData<T> {
@@ -32,6 +32,7 @@ export function useCachedData<T>(
 
   const { registerCache, unregisterCache } = useCacheManager();
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
+  const previousKeyRef = useRef<string>(key);
 
   const isStale = useCallback(() => {
     return Date.now() - cache.timestamp > finalConfig.ttl;
@@ -108,6 +109,14 @@ export function useCachedData<T>(
       fetchData();
     }
   }, [key, cache.data, isStale, fetchData]);
+
+  // Force refetch when key changes (e.g., from 'anonymous' to actual user ID)
+  useEffect(() => {
+    if (previousKeyRef.current !== key) {
+      clearCache();
+      previousKeyRef.current = key;
+    }
+  }, [key, clearCache]);
 
   return {
     data: cache.data,

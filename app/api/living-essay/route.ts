@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
-import { createLivingEssay, getRecentEssays, getRelevantTidbits } from '@/lib/db/living-essay';
+import { createLivingEssay, getRecentEssays, getRecentTidbits } from '@/lib/db/living-essay';
 
 export async function GET() {
   try {
@@ -11,7 +11,7 @@ export async function GET() {
 
     const [essays, tidbits] = await Promise.all([
       getRecentEssays(user.id),
-      getRelevantTidbits(user.id),
+      getRecentTidbits(user.id),
     ]);
 
     return NextResponse.json({ essays, tidbits });
