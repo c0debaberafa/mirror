@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCallSummary, getCallSummaryByCallId } from '@/lib/db/client';
 import { generateFromCallSummary } from '@/lib/ai/living-essay';
-import { createLivingEssay } from '@/lib/db/living-essay';
 
 // Types for Vapi webhook data
 interface VapiCall {
@@ -186,8 +185,7 @@ async function handleEndOfCallReport(message: VapiMessage) {
     // Generate living essay and tidbits from the call summary
     if (clerkUserId) {
       try {
-        const generatedContent = await generateFromCallSummary(callSummary);
-        await createLivingEssay(clerkUserId, generatedContent.sections);
+        await generateFromCallSummary(callSummary);
       } catch (error) {
         console.error('Error generating living essay:', error);
         // Don't throw the error to avoid webhook failure

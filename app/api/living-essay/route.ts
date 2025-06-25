@@ -1,19 +1,25 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
-import { createLivingEssay, getRecentEssays, getRelevantTidbits } from '@/lib/db/living-essay';
+import { createLivingEssay, getRecentEssays, getRecentTidbits } from '@/lib/db/living-essay';
 
 export async function GET() {
+  console.log('API: GET /api/living-essay called');
   try {
     const user = await currentUser();
+    console.log('API: Current user:', user?.id ? 'Authenticated' : 'Not authenticated');
+    
     if (!user?.id) {
+      console.log('API: Unauthorized - no user ID');
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
+    console.log('API: Fetching essays and tidbits for user:', user.id);
     const [essays, tidbits] = await Promise.all([
       getRecentEssays(user.id),
-      getRelevantTidbits(user.id),
+      getRecentTidbits(user.id),
     ]);
 
+    console.log('API: Retrieved data:', { essaysCount: essays.length, tidbitsCount: tidbits.length });
     return NextResponse.json({ essays, tidbits });
   } catch (error) {
     console.error('Error in GET /api/living-essay:', error);

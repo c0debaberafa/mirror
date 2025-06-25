@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from "@/hooks/use-toast"
+import { ToastAction } from "@/components/ui/toast"
+import { useCachedVoiceChatData } from '@/hooks/use-cached-data';
 
 import Vapi from '@vapi-ai/web';
 
@@ -25,14 +28,17 @@ interface VoiceChatProps {
   assistantId?: string;
   userId?: string;
   clerkUserId?: string;
+  onCallEnded?: () => void;
 }
 
 const VoiceChat: React.FC<VoiceChatProps> = ({ 
   vapiApiKey,
   assistantId,
   userId,
-  clerkUserId
+  clerkUserId,
+  onCallEnded
 }) => {
+  const { toast } = useToast();
   const [vapi, setVapi] = useState<Vapi | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -41,8 +47,15 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Use cached data hook for user data
+  const { 
+    data: userData, 
+    isLoading: isLoadingUserData
+  } = useCachedVoiceChatData(clerkUserId);
 
   useEffect(() => {
     if (vapiApiKey) {
@@ -58,6 +71,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         console.log('Call started, time since last event:', now - lastEventTime, 'ms');
         lastEventTime = now;
         setIsActive(true);
+        setIsConnecting(false);
         setIsListening(true);
         setCurrentTranscript('');
         messageQueue = []; // Reset queue on new call
@@ -69,9 +83,34 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         lastEventTime = now;
         console.log('Final message queue:', messageQueue);
         setIsActive(false);
+        setIsConnecting(false);
         setIsListening(false);
         setIsSpeaking(false);
         setCurrentTranscript('');
+
+        const { id: toastId, update, dismiss } = toast({
+          title: "Updating your Living Essay...",
+          description: "This will take a few moments.",
+        });
+
+        // TODO: Replace with actual webhook event handling
+        setTimeout(() => {
+          update({
+            id: toastId,
+            title: "Your Living Essay is ready to view.",
+            description: "Click here to view it.", // Making it more actionable
+            action: <ToastAction altText="View Essay">View</ToastAction>,
+          });
+
+          // Automatically dismiss after a few seconds
+          setTimeout(() => {
+            dismiss();
+          }, 5000);
+        }, 5000); // Simulate a 5-second processing time
+
+        if (onCallEnded) {
+          onCallEnded();
+        }
       });
 
       vapiInstance.on('speech-start', () => {
@@ -149,6 +188,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         const now = Date.now();
         console.error('Vapi error:', error, 'time since last event:', now - lastEventTime, 'ms');
         lastEventTime = now;
+        setIsConnecting(false);
         setError('An error occurred with the voice chat. Please try again.');
       });
 
@@ -157,7 +197,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
         vapiInstance?.stop();
       };
     }
-  }, [vapiApiKey, messages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vapiApiKey]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -179,17 +220,34 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
     }
 
     setError(null);
+    setIsConnecting(true);
     
     if (vapi) {
+      // Format call summaries for the assistant - only use summary field
+      const callSummariesText = userData?.callSummaries?.length 
+        ? userData.callSummaries.map((summary: { createdAt: string; summary?: string }, index: number) => 
+            `Call ${index + 1} (${new Date(summary.createdAt).toLocaleDateString()}):\n${summary.summary || 'No summary available'}`
+          ).join('\n\n')
+        : 'No previous call summaries available.';
+
       const assistantOverrides = {
         recordingEnabled: false,
         variableValues: {
           userId: userId || 'anonymous',
           clerkUserId: clerkUserId || 'anonymous',
+          user_name: userData?.firstName && userData?.lastName 
+            ? `${userData.firstName} ${userData.lastName}` 
+            : userData?.firstName || userData?.lastName || 'anonymous',
+          call_summaries: callSummariesText,
+          onboarding_archetypes: userData?.onboardingArchetypes || 'No onboarding data available.',
         },
         metadata: {
           userId: userId,
           clerkUserId: clerkUserId,
+          firstName: userData?.firstName,
+          lastName: userData?.lastName,
+          callSummaries: userData?.callSummaries || [],
+          onboardingArchetypes: userData?.onboardingArchetypes || '',
         }
       };
       
@@ -225,10 +283,14 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
           {!isActive ? (
             // Initial single circle state
             <div 
-              onClick={handleStartCall}
-              className="w-20 h-20 bg-brand-tertiary rounded-full cursor-pointer transition-all duration-500 hover:scale-110 flex items-center justify-center group"
+              onClick={isConnecting || isLoadingUserData ? undefined : handleStartCall}
+              className={`w-28 h-28 bg-brand-tertiary rounded-full transition-all duration-500 flex items-center justify-center group ${
+                isConnecting || isLoadingUserData
+                  ? 'animate-pulse' 
+                  : 'cursor-pointer hover:scale-110 animate-pulse-slow'
+              }`}
             >
-              <div className="w-16 h-16 bg-brand-secondary rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+              <div className="w-20 h-20 bg-brand-secondary rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
             </div>
           ) : (
             <>
@@ -258,6 +320,13 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
                 </p>
               </div>
             </>
+          )}
+
+          {/* Loading indicator for user data */}
+          {isLoadingUserData && (
+            <div className="mt-4 text-sm text-brand-primary/60">
+              Loading your conversation history...
+            </div>
           )}
         </div>
 
