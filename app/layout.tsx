@@ -13,6 +13,7 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { headers } from "next/headers";
+import WaitlistHeader from "@/components/WaitlistHeader";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -57,11 +58,12 @@ async function OnboardingHeader() {
   }
 
   return (
-    <header className="p-4 border-b">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Image src="/assets/images/logo.png" alt="Fred Logo" width={200} height={80} />
-        <div className="flex items-center gap-4">
-          <div className="scale-150">
+    <header className="p-4 border-b bg-white/80">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
+        <Image src="/assets/images/logo.png" alt="Fred Logo" width={200} height={80} className="object-contain" />
+        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
+          <WaitlistHeader />
+          <div className="flex items-center justify-center scale-125 md:scale-150">
             <UserButton />
           </div>
         </div>

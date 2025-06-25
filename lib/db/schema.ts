@@ -59,6 +59,14 @@ export const essayTidbits = pgTable('essay_tidbits', {
   position: integer('position').notNull(),
 });
 
+export const waitlist = pgTable('waitlist', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull(),
+  name: text('name'),
+  response: text('response').notNull(), // "tell us how you think Fred can help you achieve your goals"
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Export types for use in your application
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -70,6 +78,8 @@ export type LivingEssay = typeof livingEssays.$inferSelect;
 export type NewLivingEssay = typeof livingEssays.$inferInsert;
 export type EssayTidbit = typeof essayTidbits.$inferSelect;
 export type NewEssayTidbit = typeof essayTidbits.$inferInsert;
+export type Waitlist = typeof waitlist.$inferSelect;
+export type NewWaitlist = typeof waitlist.$inferInsert;
 
 // Types for the JSON fields
 export interface EssaySection {
