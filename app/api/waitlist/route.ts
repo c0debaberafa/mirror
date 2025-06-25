@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { waitlist, users } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, count } from 'drizzle-orm';
 
 const MAX_SLOTS = 50;
 
@@ -49,11 +49,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check remaining slots
-    const totalEntries = await db
-      .select({ count: waitlist.id })
+    const totalEntriesResult = await db
+      .select({ count: count() })
       .from(waitlist);
 
-    if (totalEntries.length >= MAX_SLOTS) {
+    const totalEntries = totalEntriesResult[0]?.count || 0;
+
+    if (totalEntries >= MAX_SLOTS) {
       return NextResponse.json(
         { message: 'Sorry, the waitlist is full!' },
         { status: 403 }
@@ -82,14 +84,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const totalEntries = await db
-      .select({ count: waitlist.id })
+    const totalEntriesResult = await db
+      .select({ count: count() })
       .from(waitlist);
 
-    const remainingSlots = Math.max(0, MAX_SLOTS - totalEntries.length);
+    const totalEntries = totalEntriesResult[0]?.count || 0;
+    const remainingSlots = Math.max(0, MAX_SLOTS - totalEntries);
 
     return NextResponse.json({
-      totalEntries: totalEntries.length,
+      totalEntries,
       remainingSlots,
       maxSlots: MAX_SLOTS,
     });

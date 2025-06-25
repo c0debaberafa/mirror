@@ -5,20 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Check, X, History, MessageCircle, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCachedLivingEssay } from '@/hooks/use-cached-data';
+import { useLivingEssay } from '@/hooks/use-cached-data';
 
 interface EssaySection {
   heading: string;
   content: string;
-}
-
-interface EssayDelta {
-  added: string[];
-  removed: string[];
-  modified: {
-    before: string;
-    after: string;
-  }[];
 }
 
 interface LivingEssayData {
@@ -26,7 +17,6 @@ interface LivingEssayData {
   version: number;
   sections: EssaySection[];
   createdAt: string;
-  delta?: EssayDelta;
 }
 
 interface Tidbit {
@@ -130,18 +120,22 @@ const EmptyState: React.FC = () => (
 );
 
 const LivingEssay: React.FC = () => {
+  console.log('LivingEssay: Component rendering...');
+  
   const [editingSection, setEditingSection] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Use cached data hook
+  // Use non-cached data hook
   const { 
     data: essayData, 
     isLoading, 
     error: fetchError, 
     refresh: refreshEssay,
     isStale 
-  } = useCachedLivingEssay();
+  } = useLivingEssay();
+
+  console.log('LivingEssay: Hook data:', { essayData, isLoading, fetchError, isStale });
 
   const essays = essayData?.essays || [];
   const currentEssay = essays[0] || null;
@@ -164,7 +158,7 @@ const LivingEssay: React.FC = () => {
       }
       
       const newEssay = await response.json();
-      // Refresh the cached data
+      // Refresh the data
       await refreshEssay();
     } catch (error) {
       console.error('Error refreshing essay:', error);
@@ -201,7 +195,7 @@ const LivingEssay: React.FC = () => {
         throw new Error('Failed to save essay');
       }
       
-      // Refresh the cached data
+      // Refresh the data
       await refreshEssay();
     } catch (error) {
       console.error('Error saving essay:', error);
@@ -216,35 +210,9 @@ const LivingEssay: React.FC = () => {
   };
 
   const handleVersionSelect = (essay: LivingEssayData) => {
-    // This would need to be handled differently with caching
-    // For now, we'll just refresh the data
+    // Refresh the data to get the latest version
     refreshEssay();
   };
-
-  const highlightDelta = (content: string): React.ReactElement => {
-    if (!currentEssay?.delta) return <>{content}</>;
-
-    let highlightedContent = content;
-    const { added, modified } = currentEssay.delta;
-
-    // Highlight modified content
-    modified.forEach(({ after }) => {
-      highlightedContent = highlightedContent.replace(
-        after,
-        `<span class="bg-yellow-100 dark:bg-yellow-800/30">${after}</span>`
-      );
-    });
-
-    // Highlight added content
-    added.forEach((addedText) => {
-      highlightedContent = highlightedContent.replace(
-        addedText,
-        `<span class="bg-green-100 dark:bg-green-800/30">${addedText}</span>`
-      );
-    });
-
-    return <div dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
-  }
 
   // Show skeleton while loading
   if (isLoading) {
@@ -331,9 +299,6 @@ const LivingEssay: React.FC = () => {
           <h1 className="font-tenor text-3xl text-brand-primary mb-3">Your Living Essay</h1>
           <div className="flex items-center justify-center space-x-4 text-brand-tertiary text-sm">
             <span>Last updated: {new Date(currentEssay.createdAt).toLocaleDateString()}</span>
-            {isStale && (
-              <span className="text-orange-600 text-xs">(Data may be outdated)</span>
-            )}
             <Button
               onClick={handleRefresh}
               disabled={isLoading}
@@ -391,7 +356,7 @@ const LivingEssay: React.FC = () => {
                 ) : (
                   <>
                     <div className="font-inter text-brand-primary/80 leading-relaxed text-base">
-                      {highlightDelta(section.content)}
+                      {section.content}
                     </div>
                     <Button
                       onClick={() => handleEdit(index)}

@@ -129,6 +129,61 @@ export function useCachedData<T>(
   };
 }
 
+// Non-cached hook for living essay (to fix loading issues)
+export function useLivingEssay() {
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    console.log('useLivingEssay: Starting fetch...');
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log('useLivingEssay: Making API call to /api/living-essay');
+      const response = await fetch('/api/living-essay');
+      console.log('useLivingEssay: API response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch living essay data');
+      }
+      const result = await response.json();
+      console.log('useLivingEssay: API response data:', result);
+      setData(result);
+      return result;
+    } catch (error) {
+      console.error('useLivingEssay: Error fetching data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const refresh = useCallback(() => {
+    console.log('useLivingEssay: Manual refresh called');
+    return fetchData();
+  }, [fetchData]);
+
+  // Initial fetch
+  useEffect(() => {
+    console.log('useLivingEssay: Component mounted, fetching data...');
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    isStale: false, // Always false since we don't cache
+    fetch: fetchData,
+    refresh,
+    clearCache: () => {}, // No-op since we don't cache
+  };
+}
+
 // Specialized hooks for different data types
 export function useCachedLivingEssay() {
   return useCachedData(
