@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const isOnboardingRoute = createRouteMatcher(['/onboarding'])
 const isPublicRoute = createRouteMatcher(['/'])
+const isApiRoute = createRouteMatcher(['/api(.*)'])
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const { userId, sessionClaims, redirectToSignIn } = await auth()
@@ -16,8 +17,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     return response
   }
 
-  // If the user isn't signed in and the route is private, redirect to sign-in
-  if (!userId && !isPublicRoute(req)) return redirectToSignIn({ returnBackUrl: req.url })
+  // If the user isn't signed in and the route is private (but not an API route), redirect to sign-in
+  if (!userId && !isPublicRoute(req) && !isApiRoute(req)) return redirectToSignIn({ returnBackUrl: req.url })
 
   // Catch users who do not have `onboardingComplete: true` in their publicMetadata
   // Redirect them to the /onboarding route to complete onboarding
